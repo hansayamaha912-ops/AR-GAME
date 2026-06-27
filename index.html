@@ -609,14 +609,13 @@ async function sendDataWithCors(email, name) {
     });
     const json = await res.json();
 
-    show("screen-leaderboard"); // 送信のタイミングでランキング画面へ遷移
+    show("screen-leaderboard"); 
 
     if (json.success) {
       const pct = 100 - json.percentile;
       document.getElementById("res-percentile").textContent = `TOP ${pct}%`;
       document.getElementById("res-percentile-text").textContent = `FROM ${json.total_players} PLAYERS`;
       
-      // リーダーボード（上位15名）のHTMLを動的生成
       const listEl = document.getElementById("leaderboard-list");
       listEl.innerHTML = ""; 
       
@@ -644,7 +643,6 @@ async function sendDataWithCors(email, name) {
   }
 }
 
-// 🔥 【超強化】万が一通信が失敗しても、いま叩き出した自分のスコアを1位に強制表示する親切設計
 function showLeaderboardFallback(currentName) {
   const listEl = document.getElementById("leaderboard-list");
   listEl.innerHTML = `
@@ -659,6 +657,7 @@ function showLeaderboardFallback(currentName) {
 }
 
 /* ---- BUTTONS EVENTS ---- */
+// 🔥 【原因の完全修正】未定義関数を正しい「sendDataWithCors」に直接変更！
 document.getElementById("btn-submit-flow").addEventListener("click", async () => {
   let name = document.getElementById("nickname-input").value.trim().toUpperCase();
   if(!name) name = "ANON";
