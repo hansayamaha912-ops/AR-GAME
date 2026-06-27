@@ -609,13 +609,14 @@ async function sendDataWithCors(email, name) {
     });
     const json = await res.json();
 
-    show("screen-leaderboard"); 
+    show("screen-leaderboard"); // 送信のタイミングでランキング画面へ遷移
 
     if (json.success) {
       const pct = 100 - json.percentile;
       document.getElementById("res-percentile").textContent = `TOP ${pct}%`;
       document.getElementById("res-percentile-text").textContent = `FROM ${json.total_players} PLAYERS`;
       
+      // リーダーボード（上位15名）のHTMLを動的生成
       const listEl = document.getElementById("leaderboard-list");
       listEl.innerHTML = ""; 
       
@@ -632,15 +633,29 @@ async function sendDataWithCors(email, name) {
         `;
       });
     } else {
-      document.getElementById("leaderboard-list").innerHTML = `<div style="text-align:center;padding:20px;font-size:8px;">ERROR LOADING BOARD</div>`;
+      showLeaderboardFallback(name);
     }
   } catch (err) {
     console.error("送信エラー:", err);
     show("screen-leaderboard");
-    document.getElementById("leaderboard-list").innerHTML = `<div style="text-align:center; padding:20px; font-size:8px; color:var(--pink);">OFFLINE MODE</div>`;
+    showLeaderboardFallback(name);
   } finally {
     document.getElementById("sending-overlay").classList.remove("show");
   }
+}
+
+// 🔥 【超強化】万が一通信が失敗しても、いま叩き出した自分のスコアを1位に強制表示する親切設計
+function showLeaderboardFallback(currentName) {
+  const listEl = document.getElementById("leaderboard-list");
+  listEl.innerHTML = `
+    <div class="board-row top3">
+      <span>👑 1. ${currentName} (YOU)</span>
+      <span>${state.score}P</span>
+    </div>
+    <div style="text-align:center; padding:16px 0 6px; font-size:7px; color:var(--pink); letter-spacing:-0.5px;">
+      *DATABASE IS TEMPORARILY OFFLINE
+    </div>
+  `;
 }
 
 /* ---- BUTTONS EVENTS ---- */
