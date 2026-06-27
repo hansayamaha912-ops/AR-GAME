@@ -63,14 +63,12 @@
   .badge-x { font-size: 16px; color: var(--dim); }
   .badge-wacca { height: 32px; object-fit: contain; filter: invert(1) drop-shadow(var(--glow-g)); }
 
-  /* 3. TOPにPOP UP EDITIONを追加 */
   .edition-tag {
     font-size: 8px; color: var(--pink); letter-spacing: 2px;
     margin-bottom: 12px; text-shadow: 0 0 8px rgba(255,45,107,0.6);
     text-transform: uppercase;
   }
 
-  /* 1. タイトルの改行を無くし、1列に並ぶように修正 */
   .start-headline {
     font-size: clamp(18px, 5.5vw, 26px);
     white-space: nowrap;
@@ -82,7 +80,6 @@
     text-shadow: 0 0 20px rgba(0,210,255,0.3);
   }
 
-  /* 2. PLAYボタンをさらに大きく拡大表示 */
   .btn-primary {
     font-family: 'Press Start 2P', monospace;
     font-size: 18px;
@@ -195,7 +192,7 @@
     box-shadow: var(--glow-v); -webkit-tap-highlight-color: transparent;
   }
 
-  /* ===== 6. RANKING BOARD SCREEN (新設) ===== */
+  /* ===== RANKING BOARD SCREEN ===== */
   #screen-leaderboard { gap: 16px; justify-content: flex-start; padding-top: 36px; overflow-y: auto; }
   .board-title {
     font-size: 16px; text-align: center; margin-bottom: 12px;
@@ -211,9 +208,9 @@
     border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 9px;
   }
   .board-row.top3 { color: var(--green); }
-  .board-row:last-child { border-none; }
+  .board-row:last-child { border-bottom: none; }
   
-  /* 5. インスタボタンの超強化・見やすさ爆上げスタイル */
+  /* インスタボタンの超強化・見やすさ爆上げスタイル */
   .sns-row { display: flex; gap: 12px; width: 100%; margin-top: 10px; }
   .btn-sns {
     flex: 1; padding: 18px 8px; border-radius: var(--r); cursor: pointer;
@@ -225,6 +222,13 @@
   .btn-sns:active { background: var(--violet); }
   .btn-sns img { height: 32px; object-fit: contain; }
   .sns-lbl { font-size: 8px; color: #fff; font-weight: bold; text-shadow: 0 0 6px rgba(255,255,255,0.5); }
+
+  .btn-retry {
+    background: none; border: 1.5px solid rgba(255,255,255,0.15);
+    color: var(--dim); font-size: 9px; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%;
+    font-family: 'Press Start 2P', monospace; -webkit-tap-highlight-color: transparent; margin-top: 8px;
+  }
+  .btn-retry:active { border-color: var(--green); color: var(--green); }
 
   #sending-overlay {
     position: fixed; inset: 0; z-index: 200; background: rgba(10,10,15,0.85); backdrop-filter: blur(8px);
@@ -567,135 +571,7 @@ function endGame() {
 document.getElementById("link-snafu").addEventListener("click", () => { state.snsClickSnafu = true; });
 document.getElementById("link-wacca").addEventListener("click", () => { state.snsClickWacca = true; });
 
-/* ---- 4 & 5 & 6. データベース連携・ランキング一括処理送信 ---- */
-async function sendDataAndLoadBoard(nickname, email) {
-  if (state.submitted) return;
-  state.submitted = true;
-
-  const accuracy = state.hits + state.misses > 0 ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
-
-  const payload = {
-    session_id:       state.sessionId,
-    event_type:       state.eventType,
-    play_count:       state.playCount,
-    load_time_ms:     state.loadTimeMs,
-    camera_permission: state.cameraPermission,
-    play_duration_sec: state.playDuration,
-    total_score:      state.score,
-    hit_taps:         state.hits,
-    miss_taps:        state.misses,
-    tap_accuracy:     accuracy,
-    email:            email || "",
-    nickname:         nickname || "ANON",
-    sns_click_wacca:  state.snsClickWacca,
-    sns_click_snafu:  state.snsClickSnafu,
-  };
-
-  document.getElementById("sending-overlay").classList.add("show");
-
-  try {
-    const res  = await fetch(GAS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-
-    if (json.success) {
-      // 5. 送信・スキップ完了後に次のランキング画面へ進みボードをレンダリング
-      show("screen-leaderboard");
-      renderLeaderboard(json.leaderboard);
-    } else {
-      showLeaderboardFallback();
-    }
-  } catch (err) {
-    console.error("通信エラー:", err);
-    showLeaderboardFallback();
-  } finally {
-    document.getElementById("sending-overlay").classList.remove("show");
-  }
-}
-
-// 6. ランキングボードのHTML要素動的生成処理
-function renderLeaderboard(boardData) {
-  const container = document.getElementById("leaderboard-list");
-  container.innerHTML = ""; // 初期化
-
-  if (!boardData || boardPlayerCount(boardData) === 0) {
-    container.innerHTML = `<div style="text-align:center; font-size:8px; color:var(--dim);">NO RECORDS YET</div>`;
-    return;
-  }
-
-  boardDataList(boardData, container);
-}
-
-function boardDataLength(boardData) {
-  return boardData.leaderboard ? boardPlayerListLength(boardData.leaderboard) : 0;
-}
-
-function renderLeaderboardHTML(list) {
-  const container = document.getElementById("leaderboard-list");
-  container.innerHTML = "";
-  list.forEach((player, index) => {
-    const rank = index + 1;
-    const isTop3 = rank <= 3 ? "top3" : "";
-    const row = document.createElement("div");
-    row.className = `board-row ${isTop3}`;
-    row.innerHTML = `
-      <span>${rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : String(rank) + "."} ${player.nickname}</span>
-      <span>${player.score} PTS</span>
-    `;
-    container.appendChild(rowsContainer);
-  });
-}
-
-function showPercentileFallback() {
-  document.getElementById("res-percentile").textContent = "RECORDED";
-  document.getElementById("res-percentile-text").textContent = "SCORE REGISTERED!";
-}
-
-function showLeaderboardData(leaderboard) {
-  const listEl = document.getElementById("leaderboard-list");
-  listetHTML = "";
-  
-  if (!leaderboard || leaderboard.length === 0) {
-    listEl.innerHTML = `<div style="text-align:center; padding:10px; font-size:8px;">NO DATA</div>`;
-    return;
-  }
-
-  leaderboard.forEach((player, index) => {
-    const rank = index + 1;
-    const isTop3 = rank <= 3 ? "top3" : "";
-    const medal = rank === 1 ? "🥇 " : rank === 2 ? "🥈 " : rank === 3 ? "🥉 " : `${rank}. `;
-    
-    tRows += `
-      <div class="board-row ${isTop3}">
-        <span>${rankLabel} ${player.nickname}</span>
-        <span>${player.score} PTS</span>
-      </div>
-    `;
-  });
-  listEl.innerHTML = rowsHtml;
-}
-
-function showPercentileFallback() {
-  document.getElementById("leaderboard-list").innerHTML = 
-    `<div style="text-align:center; padding:20px; font-size:8px; color:var(--green);">SCORE SENT!</div>`;
-}
-
-/* ---- BUTTONS (5. スキップ・送信時の次画面遷移イベント) ---- */
-document.getElementById("btn-submit-flow").addEventListener("click", async () => {
-  let name = document.getElementById("nickname-input").value.trim().toUpperCase();
-  if(!name) name = "ANON";
-  const email = document.getElementById("email-input").value.trim();
-  
-  await sendDataWithCorsFlow(email, name);
-});
-
-document.getElementById("btn-skip-flow").addEventListener("click", async () => {
-  await sendDataWithCors("", "ANON");
-});
-
+/* ---- データベース連携・ランキング一括処理送信 ---- */
 async function sendDataWithCors(email, name) {
   if (state.submitted) return;
   state.submitted = true;
@@ -715,7 +591,7 @@ async function sendDataWithCors(email, name) {
     miss_taps:        state.misses,
     tap_accuracy:     accuracy,
     email:            email || "",
-    nickname:         email ? (document.getElementById("nickname-input").value.trim() || "ANON") : "ANON",
+    nickname:         name || "ANON",
     sns_click_wacca:  state.snsClickWacca,
     sns_click_snafu:  state.snsClickSnafu,
   };
@@ -730,13 +606,14 @@ async function sendDataWithCors(email, name) {
     });
     const json = await res.json();
 
-    show("screen-leaderboard"); // 5. スキップ・送信のタイミングでランキング画面へ遷移
+    show("screen-leaderboard"); // 送信のタイミングでランキング画面へ遷移
 
     if (json.success) {
       const pct = 100 - json.percentile;
-      // 結果値をフォールバックバナーに保管したい場合はここで処理可能
+      document.getElementById("res-percentile").textContent = `TOP ${pct}%`;
+      document.getElementById("res-percentile-text").textContent = `FROM ${json.total_players} PLAYERS`;
       
-      // 6. リーダーボード（上位15名）のHTMLを動的生成
+      // リーダーボード（上位15名）のHTMLを動的生成
       const listEl = document.getElementById("leaderboard-list");
       listEl.innerHTML = "";
       
@@ -763,6 +640,19 @@ async function sendDataWithCors(email, name) {
     document.getElementById("sending-overlay").classList.remove("show");
   }
 }
+
+/* ---- BUTTONS EVENTS ---- */
+document.getElementById("btn-submit-flow").addEventListener("click", async () => {
+  let name = document.getElementById("nickname-input").value.trim().toUpperCase();
+  if(!name) name = "ANON";
+  const email = document.getElementById("email-input").value.trim();
+  
+  await sendDataWithCors(email, name);
+});
+
+document.getElementById("btn-skip-flow").addEventListener("click", async () => {
+  await sendDataWithCors("", "ANON");
+});
 
 document.getElementById("btn-retry").addEventListener("click", () => {
   resetGame();
