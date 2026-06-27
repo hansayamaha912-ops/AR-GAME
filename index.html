@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SNAFU × wacca AR GAME</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- 8bitデジタルフォント(Press Start 2P)を追加 -->
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ===== TOKENS ===== */
+  :root {
+    --bg: #0a0a0f;
+    --green: #00ff88;
+    --violet: #7b2fff;
+    --pink: #ff2d6b;
+    --white: #e8e8e0;
+    --dim: rgba(232,232,224,0.45);
+    --glass: rgba(10,10,15,0.75);
+    --glow-g: 0 0 18px #00ff8866, 0 0 40px #00ff8822;
+    --glow-v: 0 0 18px #7b2fff88, 0 0 40px #7b2fff33;
+    --r: 12px;
+  }
+
+  /* ===== RESET ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: 'Inter', sans-serif; color: var(--white); touch-action: manipulation; }
+
+  /* ===== CAMERA LAYER ===== */
+  #camera-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background: #0a0a0f;
+  }
+  #camera-video {
+    width: 100%; height: 100%;
+    object-fit: cover; opacity: 0.55;
+    display: none;
+  }
+  /* scanline overlay */
+  #camera-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px
+    );
+    pointer-events: none; z-index: 1;
+  }
+
+  /* ===== SCREEN LAYER ===== */
+  .screen {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px 20px;
+    transition: opacity 0.35s ease;
+  }
+  .screen.hidden { opacity: 0; pointer-events: none; }
+
+  /* ===== START SCREEN ===== */
+  #screen-start { gap: 0; }
+
+  /* SNAFU大きめ、wacca控えめのコラボレーションバッジスタイル */
+  .logo-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 48px;
+    width: 100%;
+    max-width: 340px;
+  }
+  .badge-snafu {
+    height: 54px; /* 大きめ配置 */
+    object-fit: contain;
+    filter: drop-shadow(var(--glow-v));
+  }
+  .badge-x {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--dim);
+  }
+  .badge-wacca {
+    height: 32px; /* 控えめ配置 */
+    object-fit: contain;
+    filter: invert(1) drop-shadow(var(--glow-g)); /* 暗い背景に馴染むよう白反転ハック */
+  }
+
+  .start-headline {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800; font-size: clamp(36px, 10vw, 56px);
+    line-height: 1.0; letter-spacing: -1.5px;
+    text-align: center; margin-bottom: 10px;
+  }
+  .start-headline em {
+    font-style: normal; color: var(--green);
+    text-shadow: var(--glow-g);
+  }
+  .start-sub {
+    font-size: 14px; color: var(--dim);
+    text-align: center; margin-bottom: 48px; letter-spacing: 0.5px;
+  }
+  .event-tag {
+    display: inline-block;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px;
+    border: 1px solid var(--violet); color: var(--violet);
+    margin-bottom: 28px;
+  }
+
+  /* デジタル8bitフォント仕様のPLAYボタン */
+  .btn-primary {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    letter-spacing: 0px;
+    padding: 20px 40px; border-radius: var(--r);
+    border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--green), #00cc6a);
+    color: #0a0a0f;
+    box-shadow: var(--glow-g), 0 4px 24px rgba(0,255,136,0.2);
+    transition: transform 0.12s, box-shadow 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-primary:active { transform: scale(0.96); }
+
+  .cam-notice {
+    font-size: 11px; color: var(--dim);
+    text-align: center; margin-top: 24px; line-height: 1.6;
+  }
+
+  /* ===== GAME SCREEN ===== */
+  #screen-game { justify-content: flex-start; padding: 0; }
+
+  #hud {
+    width: 100%; display: flex;
+    align-items: center; justify-content: space-between;
+    padding: 48px 20px 16px;
+    background: linear-gradient(to bottom, rgba(10,10,15,0.9), transparent);
+    position: relative; z-index: 20;
+  }
+  .hud-score {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 42px; font-weight: 800; letter-spacing: -1px;
+    color: var(--green); text-shadow: var(--glow-g);
+    line-height: 1;
+  }
+  .hud-label { font-size: 11px; color: var(--dim); letter-spacing: 1.5px; text-transform: uppercase; }
+  .hud-time-wrap { text-align: right; }
+  .hud-time {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 42px; font-weight: 800; letter-spacing: -1px;
+    line-height: 1; color: var(--white);
+    transition: color 0.3s;
+  }
+  .hud-time.urgent { color: var(--pink); text-shadow: 0 0 16px #ff2d6b88; }
+
+  #progress-bar-wrap {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
+    background: rgba(255,255,255,0.08);
+  }
+  #progress-bar {
+    height: 100%;
+    background: linear-gradient(to right, var(--violet), var(--green));
+    transition: width 0.25s linear;
+    width: 100%;
+  }
+
+  /* ===== TARGET ===== */
+  #game-field {
+    position: absolute; inset: 0; z-index: 15;
+    pointer-events: none;
+  }
+  .target {
+    position: absolute;
+    width: 76px; height: 76px;
+    transform: translate(-50%, -50%);
+    pointer-events: all;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    animation: targetPop 0.25s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+  .target-inner {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    border: 2.5px solid var(--green);
+    background: rgba(10,10,15,0.85); /* カメラ背景でもロゴが視認しやすいように透過黒に補正 */
+    box-shadow: 0 0 16px #00ff8844, inset 0 0 16px #00ff8818;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s;
+    position: relative;
+    overflow: hidden;
+    padding: 12px; /* ロゴ枠内の余白 */
+  }
+  .target-inner img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  /* outer ring pulse */
+  .target-inner::before {
+    content: '';
+    position: absolute; inset: -8px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0,255,136,0.25);
+    animation: ringPulse 1.2s ease-out infinite;
+  }
+  @keyframes targetPop {
+    from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+  @keyframes ringPulse {
+    0%   { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.7); opacity: 0; }
+  }
+
+  /* ターゲットが消える際のアニメーション */
+  .target.hit-vanish {
+    animation: targetVanish 0.18s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+    pointer-events: none;
+  }
+  @keyframes targetVanish {
+    0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  }
+
+  /* ===== COMBO POPUP OVERLAY ===== */
+  #combo-overlay {
+    position: fixed;
+    top: 35%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800; font-size: 46px; font-style: italic;
+    color: var(--green); text-shadow: var(--glow-g);
+    z-index: 80; pointer-events: none; opacity: 0;
+  }
+  .combo-animate {
+    animation: comboPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  @keyframes comboPop {
+    0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    30%  { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    50%  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -40%) scale(0.9); opacity: 0; }
+  }
+
+  /* ===== HIT / MISS FEEDBACK ===== */
+  .feedback-pop {
+    position: fixed; z-index: 100;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800; font-size: 22px;
+    pointer-events: none;
+    animation: feedbackAnim 0.6s ease-out forwards;
+    text-shadow: 0 0 12px currentColor;
+    transform: translate(-50%, -50%);
+  }
+  .feedback-pop.hit { color: var(--green); }
+  .feedback-pop.miss { color: var(--pink); }
+  @keyframes feedbackAnim {
+    0%   { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    100% { transform: translate(-50%, calc(-50% - 48px)) scale(0.8); opacity: 0; }
+  }
+
+  /* tap burst */
+  .burst {
+    position: fixed; z-index: 99;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    animation: burstAnim 0.4s ease-out forwards;
+  }
+  .burst.hit  { background: radial-gradient(circle, rgba(0,255,136,0.45) 0%, transparent 70%); }
+  .burst.miss { background: radial-gradient(circle, rgba(255,45,107,0.35) 0%, transparent 70%); }
+  @keyframes burstAnim {
+    0%   { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+  }
+
+  /* ===== RESULT SCREEN ===== */
+  #screen-result { gap: 16px; justify-content: flex-start; padding-top: 52px; overflow-y: auto; }
+
+  .result-header {
+    text-align: center; width: 100%;
+  }
+  .result-eyebrow {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--violet); margin-bottom: 8px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600;
+  }
+  .result-score-big {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(64px, 18vw, 96px); font-weight: 800;
+    letter-spacing: -3px; line-height: 1;
+    color: var(--green); text-shadow: var(--glow-g);
+  }
+  .result-score-label { font-size: 13px; color: var(--dim); margin-top: 2px; }
+
+  .stats-row {
+    display: flex; gap: 12px; width: 100%;
+  }
+  .stat-card {
+    flex: 1;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--r); padding: 14px 12px; text-align: center;
+  }
+  .stat-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
+  }
+  .stat-lbl { font-size: 10px; color: var(--dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+  /* Percentile banner */
+  .percentile-banner {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(123,47,255,0.25), rgba(0,255,136,0.12));
+    border: 1px solid rgba(123,47,255,0.5);
+    border-radius: var(--r); padding: 16px 20px;
+    text-align: center;
+  }
+  .percentile-number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 36px; font-weight: 800;
+    letter-spacing: -1px; color: var(--green);
+    text-shadow: var(--glow-g);
+  }
+  .percentile-text { font-size: 13px; color: var(--dim); margin-top: 4px; }
+  .percentile-text strong { color: var(--white); }
+
+  /* Email form */
+  .email-section {
+    width: 100%;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--r); padding: 18px 16px;
+  }
+  .email-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 700; margin-bottom: 4px;
+  }
+  .email-desc { font-size: 12px; color: var(--dim); margin-bottom: 14px; line-height: 1.5; }
+  .email-input {
+    width: 100%; padding: 13px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 8px; color: var(--white); font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    margin-bottom: 10px;
+  }
+  .email-input::placeholder { color: rgba(232,232,224,0.3); }
+  .email-input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(0,255,136,0.12);
+  }
+  .btn-claim {
+    width: 100%;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 15px; letter-spacing: 0.5px;
+    padding: 14px; border-radius: 8px; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--violet), #5a1fd6);
+    color: var(--white);
+    box-shadow: var(--glow-v);
+    transition: transform 0.1s, opacity 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-claim:active { transform: scale(0.97); }
+  .btn-claim:disabled { opacity: 0.5; }
+
+  .btn-skip {
+    background: none; border: none; cursor: pointer;
+    color: var(--dim); font-size: 13px;
+    text-decoration: underline; text-underline-offset: 3px;
+    padding: 8px; width: 100%; text-align: center;
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* SNS buttons */
+  .sns-row {
+    display: flex; gap: 10px; width: 100%;
+  }
+  .btn-sns {
+    flex: 1;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; font-size: 13px; letter-spacing: 0.3px;
+    padding: 13px 10px; border-radius: var(--r); cursor: pointer;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+    color: var(--white); text-align: center; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: border-color 0.2s, background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-sns:hover, .btn-sns:active {
+    border-color: var(--violet); background: rgba(123,47,255,0.12);
+  }
+  .ig-icon { font-size: 16px; }
+
+  .btn-retry {
+    background: none; border: 1.5px solid rgba(255,255,255,0.15);
+    color: var(--dim); font-size: 13px; padding: 12px;
+    border-radius: 8px; cursor: pointer; width: 100%;
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-retry:active { border-color: var(--green); color: var(--green); }
+
+  /* Sending overlay */
+  #sending-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(10,10,15,0.85); backdrop-filter: blur(8px);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  #sending-overlay.show { opacity: 1; pointer-events: all; }
+  .spinner {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid rgba(0,255,136,0.15);
+    border-top-color: var(--green);
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sending-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; color: var(--dim); letter-spacing: 1px;
+  }
+
+  /* Camera denied notice */
+  #cam-denied {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 50; font-size: 12px; color: var(--dim);
+    background: var(--glass); border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px); border-radius: 8px;
+    padding: 8px 14px; white-space: nowrap;
+    display: none;
+  }
+
+  /* misc */
+  .submitted-msg {
+    font-size: 13px; color: var(--green);
+    text-align: center; padding: 8px 0;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="camera-bg">
+  <video id="camera-video" autoplay muted playsinline></video>
+</div>
+
+<div class="screen" id="screen-start">
+  <!-- ロゴ配置の黄金比調整: SNAFU大きめ、wacca控えめの構造 -->
+  <div class="logo-badge">
+    <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
+    <span class="badge-x">×</span>
+    <img src="wacca_logo.png" class="badge-wacca" alt="wacca">
+  </div>
+
+  <div class="event-tag" id="event-tag">— EVENT —</div>
+
+  <h1 class="start-headline">TAP<br><em>THE BRAND.</em></h1>
+  <p class="start-sub">30秒でどれだけ決められる?</p>
+
+  <!-- 8bit風フォント適用のPLAYボタン -->
+  <button class="btn-primary" id="btn-start">PLAY</button>
+
+  <p class="cam-notice">※ ゲーム開始時にカメラへのアクセス許可が<br>求められます</p>
+</div>
+
+<div class="screen hidden" id="screen-game">
+  <div id="hud">
+    <div>
+      <div class="hud-label">SCORE</div>
+      <div class="hud-score" id="hud-score">0</div>
+    </div>
+    <div class="hud-time-wrap">
+      <div class="hud-label">TIME</div>
+      <div class="hud-time" id="hud-time">30</div>
+    </div>
+    <div id="progress-bar-wrap">
+      <div id="progress-bar"></div>
+    </div>
+  </div>
+  <div id="game-field"></div>
+</div>
+
+<!-- COMBO OVERLAY -->
+<div id="combo-overlay"></div>
+
+<div class="screen hidden" id="screen-result">
+  <div class="result-header">
+    <div class="result-eyebrow">GAME OVER</div>
+    <div class="result-score-big" id="res-score">0</div>
+    <div class="result-score-label">TOTAL SCORE</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val" id="res-hits" style="color:var(--green)">0</div>
+      <div class="stat-lbl">HIT</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="res-miss" style="color:var(--pink)">0</div>
+      <div class="stat-lbl">MISS</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="res-acc">0%</div>
+      <div class="stat-lbl">ACCURACY</div>
+    </div>
+  </div>
+
+  <div class="percentile-banner">
+    <div class="percentile-number" id="res-percentile">—</div>
+    <div class="percentile-text" id="res-percentile-text">スコアを集計中…</div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-title">🎁 限定特典をゲット</div>
+    <div class="email-desc">メールアドレスを入力して次回イベントの先行情報＆クーポンを受け取ろう</div>
+    <input type="email" class="email-input" id="email-input" placeholder="your@email.com" inputmode="email">
+    <button class="btn-claim" id="btn-claim">特典を受け取る</button>
+    <div class="submitted-msg" id="submitted-msg">✓ 送信しました！</div>
+    <button class="btn-skip" id="btn-skip">スキップしてSNSを見る →</button>
+  </div>
+
+  <div class="sns-row">
+    <a class="btn-sns" id="link-snafu" href="https://www.instagram.com/" target="_blank" rel="noopener">
+      <span class="ig-icon">📸</span> SNAFU<br>Instagram
+    </a>
+    <a class="btn-sns" id="link-wacca" href="https://www.instagram.com/" target="_blank" rel="noopener">
+      <span class="ig-icon">📸</span> wacca<br>Instagram
+    </a>
+  </div>
+
+  <button class="btn-retry" id="btn-retry">↩ もう一度プレイ</button>
+</div>
+
+<div id="sending-overlay">
+  <div class="spinner"></div>
+  <div class="sending-text">SUBMITTING…</div>
+</div>
+
+<div id="cam-denied">📵 カメラなしモードで動作中</div>
+
+<script>
+// =============================================
+//  CONFIG — デプロイしたURLを設定
+// =============================================
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzGKQuK1k6cdDtbFn9kxGaGeRE-DGY3Ow4dxDqWXoT2z7Z2izB7dti4RWHrwoG7Xq6k/exec";
+const SNAFU_IG = "https://www.instagram.com/snafuvintage?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
+const WACCA_IG  = "https://www.instagram.com/wacca__jp?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
+
+const GAME_DURATION = 30; // 秒
+// 画像アセットを設定（同一階層に保存されている画像名）
+const TARGET_IMAGES = ["snafu_logo.png", "wacca_logo.png"];
+const TARGET_INTERVAL_MIN = 800;   // ms
+const TARGET_INTERVAL_MAX = 1600;
+const TARGET_LIFETIME     = 2000;  // ms
+// =============================================
+
+/* ---- STATE ---- */
+const state = {
+  sessionId: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
+  eventType: new URLSearchParams(location.search).get("env") || "unknown",
+  playCount: 0,
+  loadTimeMs: 0,
+  cameraPermission: "unknown",
+  score: 0,
+  hits: 0,
+  misses: 0,
+  combo: 0, // 連撃用カウンター
+  playDuration: 0,
+  snsClickWacca: false,
+  snsClickSnafu: false,
+  submitted: false,
+  timeLeft: GAME_DURATION,
+  gameActive: false,
+  timerInterval: null,
+  spawnTimeout: null,
+  startTs: 0,
+  pageLoadTs: performance.now(),
+};
+
+/* ---- INIT ---- */
+const playCount = parseInt(localStorage.getItem("snafu_play_count") || "0");
+state.playCount = playCount + 1;
+localStorage.setItem("snafu_play_count", String(state.playCount));
+
+document.getElementById("event-tag").textContent =
+  state.eventType === "popup"  ? "POP UP EVENT" :
+  state.eventType === "night"  ? "NIGHT EVENT"  : "EVENT";
+
+document.getElementById("link-snafu").href = SNAFU_IG;
+document.getElementById("link-wacca").href = WACCA_IG;
+
+/* ---- CAMERA ---- */
+async function startCamera() {
+  const video = document.getElementById("camera-video");
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment", width: { ideal: 720 } },
+      audio: false,
+    });
+    video.srcObject = stream;
+    video.style.display = "block";
+    state.cameraPermission = "granted";
+  } catch {
+    state.cameraPermission = "denied";
+    document.getElementById("cam-denied").style.display = "block";
+    setTimeout(() => { document.getElementById("cam-denied").style.display = "none"; }, 3000);
+  }
+}
+
+/* ---- SCREEN SWITCH ---- */
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+/* ---- START ---- */
+document.getElementById("btn-start").addEventListener("click", async () => {
+  state.loadTimeMs = Math.round(performance.now() - state.pageLoadTs);
+  await startCamera();
+  resetGame();
+  show("screen-game");
+  startGame();
+});
+
+/* ---- GAME ---- */
+function resetGame() {
+  state.score = 0; state.hits = 0; state.misses = 0; state.combo = 0;
+  state.timeLeft = GAME_DURATION; state.gameActive = false;
+  state.snsClickWacca = false; state.snsClickSnafu = false;
+  state.submitted = false;
+  document.getElementById("hud-score").textContent = "0";
+  document.getElementById("hud-time").textContent  = String(GAME_DURATION);
+  document.getElementById("hud-time").classList.remove("urgent");
+  document.getElementById("progress-bar").style.width = "100%";
+  document.getElementById("game-field").innerHTML = "";
+  document.getElementById("submitted-msg").style.display = "none";
+  document.getElementById("btn-claim").disabled = false;
+  document.getElementById("email-input").value = "";
+  document.getElementById("btn-skip").style.display = "block";
+  document.getElementById("res-percentile").textContent = "—";
+  document.getElementById("res-percentile-text").textContent = "スコアを集計中…";
+  
+  const comboEl = document.getElementById("combo-overlay");
+  comboEl.textContent = "";
+  comboEl.classList.remove("combo-animate");
+}
+
+function startGame() {
+  state.gameActive = true;
+  state.startTs = Date.now();
+
+  // Countdown timer
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    const el = document.getElementById("hud-time");
+    el.textContent = String(state.timeLeft);
+    document.getElementById("progress-bar").style.width =
+      ((state.timeLeft / GAME_DURATION) * 100) + "%";
+    if (state.timeLeft <= 10) el.classList.add("urgent");
+    if (state.timeLeft <= 0) endGame();
+  }, 1000);
+
+  spawnNext();
+}
+
+function spawnNext() {
+  if (!state.gameActive) return;
+  const delay = TARGET_INTERVAL_MIN +
+    Math.random() * (TARGET_INTERVAL_MAX - TARGET_INTERVAL_MIN);
+  state.spawnTimeout = setTimeout(() => {
+    spawnTarget();
+    spawnNext();
+  }, delay);
+}
+
+function spawnTarget() {
+  const field  = document.getElementById("game-field");
+  const margin = 56;
+  const x = margin + Math.random() * (window.innerWidth  - margin * 2);
+  const y = 140   + Math.random() * (window.innerHeight  - 240);
+  
+  // ランダムにSNAFUかwaccaのロゴアセットをピックアップ
+  const randomImg = TARGET_IMAGES[Math.floor(Math.random() * TARGET_IMAGES.length)];
+
+  const t = document.createElement("div");
+  t.className = "target";
+  t.style.left = x + "px";
+  t.style.top  = y + "px";
+  
+  // 3Dアセット風の立体ネオンサークル内にロゴをインサート。waccaロゴ(黒地)用に白反転フィルターを自動適用するスタイル
+  const invertStyle = randomImg === "wacca_logo.png" ? "filter: invert(1);" : "";
+  t.innerHTML  = `
+    <div class="target-inner">
+      <img src="${randomImg}" style="${invertStyle}" alt="target">
+    </div>
+  `;
+
+  let hit = false;
+  t.addEventListener("click", (e) => {
+    if (!state.gameActive) return;
+    e.stopPropagation();
+    hit = true;
+    
+    // コンボシステム発火 & 5コンボごとにスコアボーナス
+    state.combo++;
+    state.score += 10 + Math.floor(state.combo / 5) * 5;
+    state.hits++;
+    
+    document.getElementById("hud-score").textContent = state.score;
+    showFeedback(x, y, `HIT +10`, "hit");
+    
+    // 3連撃以上でコンボオーバーレイを演出
+    if (state.combo >= 3) {
+      const comboEl = document.getElementById("combo-overlay");
+      comboEl.textContent = `${state.combo} COMBO!`;
+      
+      // クラスを外しリフローさせてから再アニメーション
+      comboEl.classList.remove("combo-animate");
+      void comboEl.offsetWidth; 
+      comboEl.classList.add("combo-animate");
+      
+      // 10コンボ毎にカラーをピンクにして現場の熱量を煽る
+      if (state.combo % 10 === 0) {
+        comboEl.style.color = "var(--pink)";
+        comboEl.style.textShadow = "0 0 18px #ff2d6b88";
+      } else {
+        comboEl.style.color = "var(--green)";
+        comboEl.style.textShadow = "var(--glow-g)";
+      }
+    }
+
+    // 縮小フェードアウトのアニメーションを付与して削除
+    t.classList.add("hit-vanish");
+    setTimeout(() => { if(t.parentNode) t.remove(); }, 180);
+  });
+
+  field.appendChild(t);
+  setTimeout(() => { if (!hit && t.parentNode) { t.remove(); } }, TARGET_LIFETIME);
+}
+
+// Miss tap on the game field itself
+document.getElementById("screen-game").addEventListener("click", (e) => {
+  if (!state.gameActive) return;
+  if (e.target.closest(".target") || e.target.closest("#hud")) return;
+  
+  state.combo = 0; // 空振りのためコンボ終了
+  state.misses++;
+  showFeedback(e.clientX, e.clientY, "MISS", "miss");
+});
+
+function showFeedback(x, y, text, type) {
+  const fb = document.createElement("div");
+  fb.className = `feedback-pop ${type}`;
+  fb.textContent = text;
+  fb.style.left = x + "px"; fb.style.top = y + "px";
+  document.body.appendChild(fb);
+  setTimeout(() => fb.remove(), 650);
+
+  const burst = document.createElement("div");
+  burst.className = `burst ${type}`;
+  burst.style.left = x + "px"; burst.style.top = y + "px";
+  document.body.appendChild(burst);
+  setTimeout(() => burst.remove(), 420);
+}
+
+function endGame() {
+  state.gameActive = false;
+  clearInterval(state.timerInterval);
+  clearTimeout(state.spawnTimeout);
+  document.getElementById("game-field").innerHTML = "";
+
+  state.playDuration = Math.round((Date.now() - state.startTs) / 1000);
+  const accuracy = state.hits + state.misses > 0
+    ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
+
+  // Populate result
+  document.getElementById("res-score").textContent = state.score;
+  document.getElementById("res-hits").textContent  = state.hits;
+  document.getElementById("res-miss").textContent  = state.misses;
+  document.getElementById("res-acc").textContent   = accuracy + "%";
+
+  show("screen-result");
+}
+
+/* ---- SNS TRACKING ---- */
+document.getElementById("link-snafu").addEventListener("click", () => {
+  state.snsClickSnafu = true;
+});
+document.getElementById("link-wacca").addEventListener("click", () => {
+  state.snsClickWacca = true;
+});
+
+/* ---- SUBMIT (CORS版を使用) ---- */
+async function sendDataWithCors(email) {
+  if (state.submitted) return;
+  state.submitted = true;
+
+  const accuracy = state.hits + state.misses > 0
+    ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
+
+  const payload = {
+    session_id:       state.sessionId,
+    event_type:       state.eventType,
+    play_count:       state.playCount,
+    load_time_ms:     state.loadTimeMs,
+    camera_permission: state.cameraPermission,
+    play_duration_sec: state.playDuration,
+    total_score:      state.score,
+    hit_taps:         state.hits,
+    miss_taps:        state.misses,
+    tap_accuracy:     accuracy,
+    email:            email || "",
+    sns_click_wacca:  state.snsClickWacca,
+    sns_click_snafu:  state.snsClickSnafu,
+  };
+
+  document.getElementById("sending-overlay").classList.add("show");
+
+  try {
+    const res  = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" }, // GASのCORSを突破する必須設定
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      const pct = 100 - json.percentile;
+      document.getElementById("res-percentile").textContent = `上位 ${pct}%`;
+      document.getElementById("res-percentile-text").textContent =
+        `全 ${json.total_players} 人中の記録です`;
+    } else {
+      showPercentileFallback();
+    }
+  } catch (err) {
+    console.error("送信エラー:", err);
+    showPercentileFallback();
+  } finally {
+    document.getElementById("sending-overlay").classList.remove("show");
+  }
+}
+
+function showPercentileFallback() {
+  document.getElementById("res-percentile").textContent = "送信完了";
+  document.getElementById("res-percentile-text").textContent =
+    "スコアを記録しました！";
+}
+
+/* ---- BUTTONS (修正済みイベント) ---- */
+document.getElementById("btn-claim").addEventListener("click", async () => {
+  const email = document.getElementById("email-input").value.trim();
+  document.getElementById("btn-claim").disabled = true;
+  await sendDataWithCors(email);  // CORS対応版を呼び出し
+  document.getElementById("submitted-msg").style.display = "block";
+  document.getElementById("btn-skip").style.display = "none";
+});
+
+document.getElementById("btn-skip").addEventListener("click", async () => {
+  await sendDataWithCors("");  // CORS対応版を呼び出し
+});
+
+document.getElementById("btn-retry").addEventListener("click", () => {
+  resetGame();
+  show("screen-game");
+  startGame();
+});
+</script>
+</body>
+</html>
