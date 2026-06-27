@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Shoot & Bang</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<!-- 8bitデジタルフォント(Press Start 2P)を読み込み -->
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   /* ===== TOKENS ===== */
@@ -209,14 +208,16 @@
     width: 100%; background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
     border-radius: var(--r); padding: 14px; max-height: 280px; overflow-y: auto;
   }
+  .board-container::-webkit-scrollbar { width: 4px; }
+  .board-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
   .board-row {
-    display: flex; justify-content: space-between; padding: 8px 0;
+    display: flex; justify-content: space-between; padding: 10px 0;
     border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 9px;
   }
-  .board-row.top3 { color: var(--green); }
+  .board-row.top3 { color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,0.4); }
   .board-row:last-child { border-bottom: none; }
   
-  /* インスタボタンの超強化・見やすさ爆上げスタイル */
+  /* インスタボタン */
   .sns-row { display: flex; gap: 12px; width: 100%; margin-top: 10px; }
   .btn-sns {
     flex: 1; padding: 18px 8px; border-radius: var(--r); cursor: pointer;
@@ -254,7 +255,6 @@
   <video id="camera-video" autoplay muted playsinline></video>
 </div>
 
-<!-- START SCREEN -->
 <div class="screen" id="screen-start">
   <div class="logo-badge">
     <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
@@ -271,7 +271,6 @@
   <p class="cam-notice">CAMERA ACCESS REQUIRED<br>FOR THE GAMEPLAY</p>
 </div>
 
-<!-- GAME SCREEN -->
 <div class="screen hidden" id="screen-game">
   <div id="hud">
     <div>
@@ -291,7 +290,6 @@
 
 <div id="combo-overlay"></div>
 
-<!-- RESULT SCREEN -->
 <div class="screen hidden" id="screen-result">
   <div class="result-header">
     <div class="result-eyebrow">GAME OVER</div>
@@ -330,7 +328,6 @@
   </div>
 </div>
 
-<!-- RANKING BOARD SCREEN -->
 <div class="screen hidden" id="screen-leaderboard">
   <h2 class="board-title">🏆 TOP 15 RECORDS</h2>
   
@@ -377,7 +374,7 @@ const TARGET_LIFETIME     = 1500;
 /* ---- STATE ---- */
 const state = {
   sessionId: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
-  eventType: new URLSearchParams(location.search).get("env") || "unknown",
+  eventType: new URLSearchParams(location.search).get("env") || "popup",
   playCount: 0,
   loadTimeMs: 0,
   cameraPermission: "unknown",
@@ -401,10 +398,6 @@ const state = {
 const playCount = parseInt(localStorage.getItem("snafu_play_count") || "0");
 state.playCount = playCount + 1;
 localStorage.setItem("snafu_play_count", String(state.playCount));
-
-document.getElementById("event-tag").textContent =
-  state.eventType === "popup"  ? "POP UP EVENT" :
-  state.eventType === "night"  ? "NIGHT EVENT"  : "EVENT";
 
 document.getElementById("link-snafu").href = SNAFU_IG;
 document.getElementById("link-wacca").href = WACCA_IG;
@@ -581,7 +574,7 @@ function endGame() {
 document.getElementById("link-snafu").addEventListener("click", () => { state.snsClickSnafu = true; });
 document.getElementById("link-wacca").addEventListener("click", () => { state.snsClickWacca = true; });
 
-/* ---- データベース連携・ランキング一括処理送信 ---- */
+/* ---- データ送信＆ランキングボード生成 ---- */
 async function sendDataWithCors(email, name) {
   if (state.submitted) return;
   state.submitted = true;
@@ -616,16 +609,15 @@ async function sendDataWithCors(email, name) {
     });
     const json = await res.json();
 
-    show("screen-leaderboard"); // 送信のタイミングでランキング画面へ遷移
+    show("screen-leaderboard"); 
 
     if (json.success) {
       const pct = 100 - json.percentile;
       document.getElementById("res-percentile").textContent = `TOP ${pct}%`;
       document.getElementById("res-percentile-text").textContent = `FROM ${json.total_players} PLAYERS`;
       
-      // リーダーボード（上位15名）のHTMLを動的生成
       const listEl = document.getElementById("leaderboard-list");
-      listEl.innerHTML = ""; // 🔥 タイポを修正
+      listEl.innerHTML = ""; 
       
       json.leaderboard.forEach((player, index) => {
         const rank = index + 1;
