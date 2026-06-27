@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SNAFU × wacca AR GAME</title>
+<title>Shoot & Bang</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<!-- 8bitデジタルフォント(Press Start 2P)を追加 -->
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   /* ===== TOKENS ===== */
   :root {
@@ -25,7 +24,15 @@
   /* ===== RESET ===== */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
-  body { font-family: 'Inter', sans-serif; color: var(--white); touch-action: manipulation; }
+  
+  /* 1. ページ全体に8bitフォントを採用 */
+  body { 
+    font-family: 'Press Start 2P', monospace; 
+    color: var(--white); 
+    touch-action: manipulation;
+    font-size: 12px;
+    line-height: 1.5;
+  }
 
   /* ===== CAMERA LAYER ===== */
   #camera-bg {
@@ -37,7 +44,6 @@
     object-fit: cover; opacity: 0.55;
     display: none;
   }
-  /* scanline overlay */
   #camera-bg::after {
     content: '';
     position: absolute; inset: 0;
@@ -62,62 +68,58 @@
   /* ===== START SCREEN ===== */
   #screen-start { gap: 0; }
 
-  /* SNAFU大きめ、wacca控えめのコラボレーションバッジスタイル */
   .logo-badge {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 14px;
-    margin-bottom: 48px;
+    margin-bottom: 40px;
     width: 100%;
     max-width: 340px;
   }
   .badge-snafu {
-    height: 54px; /* 大きめ配置 */
+    height: 54px;
     object-fit: contain;
     filter: drop-shadow(var(--glow-v));
   }
   .badge-x {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 800;
-    font-size: 20px;
+    font-size: 16px;
     color: var(--dim);
   }
   .badge-wacca {
-    height: 32px; /* 控えめ配置 */
+    height: 32px;
     object-fit: contain;
-    filter: invert(1) drop-shadow(var(--glow-g)); /* 暗い背景に馴染むよう白反転ハック */
+    /* 3. トップのwaccaロゴを美しく白反転 */
+    filter: invert(1) drop-shadow(var(--glow-g));
   }
 
+  /* 4. ゲーム名を Shoot & Bang に変更、青白グラデーション化 */
   .start-headline {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 800; font-size: clamp(36px, 10vw, 56px);
-    line-height: 1.0; letter-spacing: -1.5px;
-    text-align: center; margin-bottom: 10px;
-  }
-  .start-headline em {
-    font-style: normal; color: var(--green);
-    text-shadow: var(--glow-g);
+    font-size: clamp(24px, 6vw, 36px);
+    line-height: 1.3;
+    text-align: center; 
+    margin-bottom: 20px;
+    background: linear-gradient(to bottom, #ffffff 0%, #00d2ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(0,210,255,0.3);
   }
   .start-sub {
-    font-size: 14px; color: var(--dim);
+    font-size: 10px; color: var(--dim);
     text-align: center; margin-bottom: 48px; letter-spacing: 0.5px;
   }
   .event-tag {
     display: inline-block;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
     text-transform: uppercase;
-    padding: 4px 10px; border-radius: 4px;
+    padding: 6px 12px; border-radius: 4px;
     border: 1px solid var(--violet); color: var(--violet);
     margin-bottom: 28px;
   }
 
-  /* デジタル8bitフォント仕様のPLAYボタン */
   .btn-primary {
     font-family: 'Press Start 2P', monospace;
     font-size: 14px;
-    letter-spacing: 0px;
     padding: 20px 40px; border-radius: var(--r);
     border: none; cursor: pointer;
     background: linear-gradient(135deg, var(--green), #00cc6a);
@@ -129,8 +131,8 @@
   .btn-primary:active { transform: scale(0.96); }
 
   .cam-notice {
-    font-size: 11px; color: var(--dim);
-    text-align: center; margin-top: 24px; line-height: 1.6;
+    font-size: 8px; color: var(--dim);
+    text-align: center; margin-top: 24px; line-height: 1.8;
   }
 
   /* ===== GAME SCREEN ===== */
@@ -144,18 +146,16 @@
     position: relative; z-index: 20;
   }
   .hud-score {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 42px; font-weight: 800; letter-spacing: -1px;
-    color: var(--green); text-shadow: var(--glow-g);
+    font-size: 24px; color: var(--green); text-shadow: var(--glow-g);
     line-height: 1;
+    margin-top: 4px;
   }
-  .hud-label { font-size: 11px; color: var(--dim); letter-spacing: 1.5px; text-transform: uppercase; }
+  .hud-label { font-size: 9px; color: var(--dim); text-transform: uppercase; }
   .hud-time-wrap { text-align: right; }
   .hud-time {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 42px; font-weight: 800; letter-spacing: -1px;
-    line-height: 1; color: var(--white);
+    font-size: 24px; line-height: 1; color: var(--white);
     transition: color 0.3s;
+    margin-top: 4px;
   }
   .hud-time.urgent { color: var(--pink); text-shadow: 0 0 16px #ff2d6b88; }
 
@@ -189,20 +189,16 @@
     width: 100%; height: 100%;
     border-radius: 50%;
     border: 2.5px solid var(--green);
-    background: rgba(10,10,15,0.85); /* カメラ背景でもロゴが視認しやすいように透過黒に補正 */
+    background: rgba(10,10,15,0.85);
     box-shadow: 0 0 16px #00ff8844, inset 0 0 16px #00ff8818;
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.1s;
     position: relative;
     overflow: hidden;
-    padding: 12px; /* ロゴ枠内の余白 */
+    padding: 12px;
   }
   .target-inner img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+    width: 100%; height: 100%; object-fit: contain;
   }
-  /* outer ring pulse */
   .target-inner::before {
     content: '';
     position: absolute; inset: -8px;
@@ -219,7 +215,6 @@
     100% { transform: scale(1.7); opacity: 0; }
   }
 
-  /* ターゲットが消える際のアニメーション */
   .target.hit-vanish {
     animation: targetVanish 0.18s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
     pointer-events: none;
@@ -234,8 +229,7 @@
     position: fixed;
     top: 35%; left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 800; font-size: 46px; font-style: italic;
+    font-size: 24px;
     color: var(--green); text-shadow: var(--glow-g);
     z-index: 80; pointer-events: none; opacity: 0;
   }
@@ -252,8 +246,7 @@
   /* ===== HIT / MISS FEEDBACK ===== */
   .feedback-pop {
     position: fixed; z-index: 100;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 800; font-size: 22px;
+    font-size: 14px;
     pointer-events: none;
     animation: feedbackAnim 0.6s ease-out forwards;
     text-shadow: 0 0 12px currentColor;
@@ -266,7 +259,6 @@
     100% { transform: translate(-50%, calc(-50% - 48px)) scale(0.8); opacity: 0; }
   }
 
-  /* tap burst */
   .burst {
     position: fixed; z-index: 99;
     width: 80px; height: 80px;
@@ -283,175 +275,94 @@
   }
 
   /* ===== RESULT SCREEN ===== */
-  #screen-result { gap: 16px; justify-content: flex-start; padding-top: 52px; overflow-y: auto; }
+  #screen-result { gap: 16px; justify-content: flex-start; padding-top: 40px; overflow-y: auto; }
 
-  .result-header {
-    text-align: center; width: 100%;
-  }
-  .result-eyebrow {
-    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-    color: var(--violet); margin-bottom: 8px;
-    font-family: 'Space Grotesk', sans-serif; font-weight: 600;
-  }
-  .result-score-big {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(64px, 18vw, 96px); font-weight: 800;
-    letter-spacing: -3px; line-height: 1;
-    color: var(--green); text-shadow: var(--glow-g);
-  }
-  .result-score-label { font-size: 13px; color: var(--dim); margin-top: 2px; }
+  .result-header { text-align: center; width: 100%; }
+  .result-eyebrow { font-size: 10px; color: var(--pink); margin-bottom: 12px; text-shadow: 0 0 8px #ff2d6b44; }
+  .result-score-big { font-size: 48px; color: var(--green); text-shadow: var(--glow-g); line-height: 1; }
+  .result-score-label { font-size: 9px; color: var(--dim); margin-top: 10px; }
 
-  .stats-row {
-    display: flex; gap: 12px; width: 100%;
-  }
+  .stats-row { display: flex; flex-direction: column; gap: 8px; width: 100%; }
   .stat-card {
-    flex: 1;
-    background: var(--glass);
-    backdrop-filter: blur(12px);
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--glass); backdrop-filter: blur(12px);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: var(--r); padding: 14px 12px; text-align: center;
+    border-radius: var(--r); padding: 14px 16px;
   }
-  .stat-val {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
-  }
-  .stat-lbl { font-size: 10px; color: var(--dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+  .stat-val { font-size: 14px; }
+  .stat-lbl { font-size: 9px; color: var(--dim); }
 
-  /* Percentile banner */
   .percentile-banner {
-    width: 100%;
-    background: linear-gradient(135deg, rgba(123,47,255,0.25), rgba(0,255,136,0.12));
-    border: 1px solid rgba(123,47,255,0.5);
-    border-radius: var(--r); padding: 16px 20px;
-    text-align: center;
+    width: 100%; background: linear-gradient(135deg, rgba(123,47,255,0.25), rgba(0,255,136,0.12));
+    border: 1px solid rgba(123,47,255,0.5); border-radius: var(--r); padding: 16px; text-align: center;
   }
-  .percentile-number {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 36px; font-weight: 800;
-    letter-spacing: -1px; color: var(--green);
-    text-shadow: var(--glow-g);
-  }
-  .percentile-text { font-size: 13px; color: var(--dim); margin-top: 4px; }
-  .percentile-text strong { color: var(--white); }
+  .percentile-number { font-size: 18px; color: var(--green); text-shadow: var(--glow-g); }
+  .percentile-text { font-size: 8px; color: var(--dim); margin-top: 8px; line-height: 1.4; }
 
-  /* Email form */
   .email-section {
-    width: 100%;
-    background: var(--glass);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: var(--r); padding: 18px 16px;
+    width: 100%; background: var(--glass); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r); padding: 16px;
   }
-  .email-title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 15px; font-weight: 700; margin-bottom: 4px;
-  }
-  .email-desc { font-size: 12px; color: var(--dim); margin-bottom: 14px; line-height: 1.5; }
+  .email-title { font-size: 11px; margin-bottom: 8px; color: var(--white); }
+  .email-desc { font-size: 8px; color: var(--dim); margin-bottom: 14px; line-height: 1.6; }
   .email-input {
-    width: 100%; padding: 13px 14px;
-    background: rgba(255,255,255,0.05);
-    border: 1.5px solid rgba(255,255,255,0.15);
-    border-radius: 8px; color: var(--white); font-size: 15px;
-    font-family: 'Inter', sans-serif;
-    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-    margin-bottom: 10px;
+    width: 100%; padding: 14px; background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(255,255,255,0.15); border-radius: 8px; color: var(--white); font-size: 10px;
+    font-family: 'Press Start 2P', monospace; outline: none; margin-bottom: 12px;
   }
-  .email-input::placeholder { color: rgba(232,232,224,0.3); }
-  .email-input:focus {
-    border-color: var(--green);
-    box-shadow: 0 0 0 3px rgba(0,255,136,0.12);
-  }
+  .email-input::placeholder { color: rgba(232,232,224,0.25); }
   .btn-claim {
-    width: 100%;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700; font-size: 15px; letter-spacing: 0.5px;
+    width: 100%; font-family: 'Press Start 2P', monospace; font-size: 11px;
     padding: 14px; border-radius: 8px; border: none; cursor: pointer;
-    background: linear-gradient(135deg, var(--violet), #5a1fd6);
-    color: var(--white);
-    box-shadow: var(--glow-v);
-    transition: transform 0.1s, opacity 0.2s;
-    -webkit-tap-highlight-color: transparent;
+    background: linear-gradient(135deg, var(--violet), #5a1fd6); color: var(--white);
+    box-shadow: var(--glow-v); -webkit-tap-highlight-color: transparent;
   }
-  .btn-claim:active { transform: scale(0.97); }
   .btn-claim:disabled { opacity: 0.5; }
-
   .btn-skip {
-    background: none; border: none; cursor: pointer;
-    color: var(--dim); font-size: 13px;
-    text-decoration: underline; text-underline-offset: 3px;
-    padding: 8px; width: 100%; text-align: center;
-    font-family: 'Inter', sans-serif;
+    background: none; border: none; cursor: pointer; color: var(--dim); font-size: 8px;
+    padding: 12px; width: 100%; text-align: center; font-family: 'Press Start 2P', monospace;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* SNS buttons */
-  .sns-row {
-    display: flex; gap: 10px; width: 100%;
-  }
+  /* 2. 結果画面のSNS遷移リンクを洗練されたロゴ画像ボタンへ変更 */
+  .sns-row { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
   .btn-sns {
-    flex: 1;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 600; font-size: 13px; letter-spacing: 0.3px;
-    padding: 13px 10px; border-radius: var(--r); cursor: pointer;
-    border: 1.5px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.04);
-    color: var(--white); text-align: center; text-decoration: none;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    transition: border-color 0.2s, background 0.2s;
-    -webkit-tap-highlight-color: transparent;
+    flex: 1; padding: 14px 8px; border-radius: var(--r); cursor: pointer;
+    border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    -webkit-tap-highlight-color: transparent; transition: border-color 0.2s;
   }
-  .btn-sns:hover, .btn-sns:active {
-    border-color: var(--violet); background: rgba(123,47,255,0.12);
-  }
-  .ig-icon { font-size: 16px; }
+  .btn-sns:active { border-color: var(--violet); background: rgba(123,47,255,0.12); }
+  .btn-sns img { height: 28px; object-fit: contain; }
+  .sns-lbl { font-size: 7px; color: var(--dim); letter-spacing: -0.5px; }
 
   .btn-retry {
     background: none; border: 1.5px solid rgba(255,255,255,0.15);
-    color: var(--dim); font-size: 13px; padding: 12px;
-    border-radius: 8px; cursor: pointer; width: 100%;
-    font-family: 'Inter', sans-serif;
-    -webkit-tap-highlight-color: transparent;
-    transition: border-color 0.2s, color 0.2s;
+    color: var(--dim); font-size: 9px; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%;
+    font-family: 'Press Start 2P', monospace; -webkit-tap-highlight-color: transparent; margin-top: 8px;
   }
   .btn-retry:active { border-color: var(--green); color: var(--green); }
 
-  /* Sending overlay */
   #sending-overlay {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(10,10,15,0.85); backdrop-filter: blur(8px);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 16px;
+    position: fixed; inset: 0; z-index: 200; background: rgba(10,10,15,0.85); backdrop-filter: blur(8px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
     opacity: 0; pointer-events: none; transition: opacity 0.2s;
   }
   #sending-overlay.show { opacity: 1; pointer-events: all; }
   .spinner {
-    width: 40px; height: 40px; border-radius: 50%;
-    border: 3px solid rgba(0,255,136,0.15);
-    border-top-color: var(--green);
-    animation: spin 0.7s linear infinite;
+    width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(0,255,136,0.15);
+    border-top-color: var(--green); animation: spin 0.7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .sending-text {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 15px; color: var(--dim); letter-spacing: 1px;
-  }
+  .sending-text { font-size: 10px; color: var(--dim); }
 
-  /* Camera denied notice */
   #cam-denied {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    z-index: 50; font-size: 12px; color: var(--dim);
-    background: var(--glass); border: 1px solid rgba(255,255,255,0.08);
-    backdrop-filter: blur(8px); border-radius: 8px;
-    padding: 8px 14px; white-space: nowrap;
-    display: none;
+    z-index: 50; font-size: 8px; color: var(--dim); background: var(--glass);
+    border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); border-radius: 8px;
+    padding: 8px 14px; white-space: nowrap; display: none;
   }
-
-  /* misc */
-  .submitted-msg {
-    font-size: 13px; color: var(--green);
-    text-align: center; padding: 8px 0;
-    display: none;
-  }
+  .submitted-msg { font-size: 10px; color: var(--green); text-align: center; padding: 8px 0; display: none; }
 </style>
 </head>
 <body>
@@ -461,7 +372,6 @@
 </div>
 
 <div class="screen" id="screen-start">
-  <!-- ロゴ配置の黄金比調整: SNAFU大きめ、wacca控えめの構造 -->
   <div class="logo-badge">
     <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
     <span class="badge-x">×</span>
@@ -470,13 +380,12 @@
 
   <div class="event-tag" id="event-tag">— EVENT —</div>
 
-  <h1 class="start-headline">TAP<br><em>THE BRAND.</em></h1>
-  <p class="start-sub">30秒でどれだけ決められる?</p>
+  <h1 class="start-headline">Shoot<br>& Bang</h1>
+  <p class="start-sub">LIMIT: 10 SECONDS</p>
 
-  <!-- 8bit風フォント適用のPLAYボタン -->
   <button class="btn-primary" id="btn-start">PLAY</button>
 
-  <p class="cam-notice">※ ゲーム開始時にカメラへのアクセス許可が<br>求められます</p>
+  <p class="cam-notice">CAMERA ACCESS REQUIRED<br>FOR THE GAMEPLAY</p>
 </div>
 
 <div class="screen hidden" id="screen-game">
@@ -487,7 +396,7 @@
     </div>
     <div class="hud-time-wrap">
       <div class="hud-label">TIME</div>
-      <div class="hud-time" id="hud-time">30</div>
+      <div class="hud-time" id="hud-time">10</div>
     </div>
     <div id="progress-bar-wrap">
       <div id="progress-bar"></div>
@@ -496,7 +405,6 @@
   <div id="game-field"></div>
 </div>
 
-<!-- COMBO OVERLAY -->
 <div id="combo-overlay"></div>
 
 <div class="screen hidden" id="screen-result">
@@ -508,43 +416,45 @@
 
   <div class="stats-row">
     <div class="stat-card">
-      <div class="stat-val" id="res-hits" style="color:var(--green)">0</div>
-      <div class="stat-lbl">HIT</div>
+      <div class="stat-lbl" style="color:var(--green)">HIT</div>
+      <div class="stat-val" id="res-hits">0</div>
     </div>
     <div class="stat-card">
-      <div class="stat-val" id="res-miss" style="color:var(--pink)">0</div>
-      <div class="stat-lbl">MISS</div>
+      <div class="stat-lbl" style="color:var(--pink)">MISS</div>
+      <div class="stat-val" id="res-miss">0</div>
     </div>
     <div class="stat-card">
-      <div class="stat-val" id="res-acc">0%</div>
       <div class="stat-lbl">ACCURACY</div>
+      <div class="stat-val" id="res-acc">0%</div>
     </div>
   </div>
 
   <div class="percentile-banner">
     <div class="percentile-number" id="res-percentile">—</div>
-    <div class="percentile-text" id="res-percentile-text">スコアを集計中…</div>
+    <div class="percentile-text" id="res-percentile-text">ANALYZING RECORD...</div>
   </div>
 
   <div class="email-section">
-    <div class="email-title">🎁 限定特典をゲット</div>
-    <div class="email-desc">メールアドレスを入力して次回イベントの先行情報＆クーポンを受け取ろう</div>
+    <div class="email-title">🎁 LIMITED REWARD</div>
+    <div class="email-desc">ENTER EMAIL TO GET NEXT POPUP INFO & COUPON.</div>
     <input type="email" class="email-input" id="email-input" placeholder="your@email.com" inputmode="email">
-    <button class="btn-claim" id="btn-claim">特典を受け取る</button>
-    <div class="submitted-msg" id="submitted-msg">✓ 送信しました！</div>
-    <button class="btn-skip" id="btn-skip">スキップしてSNSを見る →</button>
+    <button class="btn-claim" id="btn-claim">CLAIM</button>
+    <div class="submitted-msg" id="submitted-msg">✓ SUBMITTED!</div>
+    <button class="btn-skip" id="btn-skip">SKIP AND VISIT INSTAGRAM →</button>
   </div>
 
   <div class="sns-row">
-    <a class="btn-sns" id="link-snafu" href="https://www.instagram.com/" target="_blank" rel="noopener">
-      <span class="ig-icon">📸</span> SNAFU<br>Instagram
+    <a class="btn-sns" id="link-snafu" href="#" target="_blank" rel="noopener">
+      <img src="snafu_logo.png" alt="SNAFU">
+      <span class="sns-lbl">SNAFU INSTA</span>
     </a>
-    <a class="btn-sns" id="link-wacca" href="https://www.instagram.com/" target="_blank" rel="noopener">
-      <span class="ig-icon">📸</span> wacca<br>Instagram
+    <a class="btn-sns" id="link-wacca" href="#" target="_blank" rel="noopener">
+      <img src="wacca_logo.png" style="filter: invert(1);" alt="wacca">
+      <span class="sns-lbl">WACCA INSTA</span>
     </a>
   </div>
 
-  <button class="btn-retry" id="btn-retry">↩ もう一度プレイ</button>
+  <button class="btn-retry" id="btn-retry">RETRY</button>
 </div>
 
 <div id="sending-overlay">
@@ -552,22 +462,22 @@
   <div class="sending-text">SUBMITTING…</div>
 </div>
 
-<div id="cam-denied">📵 カメラなしモードで動作中</div>
+<div id="cam-denied">📵 NO CAMERA MODE</div>
 
 <script>
 // =============================================
-//  CONFIG — デプロイしたURLを設定
+//  CONFIG — システム設定
 // =============================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzGKQuK1k6cdDtbFn9kxGaGeRE-DGY3Ow4dxDqWXoT2z7Z2izB7dti4RWHrwoG7Xq6k/exec";
 const SNAFU_IG = "https://www.instagram.com/snafuvintage?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 const WACCA_IG  = "https://www.instagram.com/wacca__jp?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 
-const GAME_DURATION = 30; // 秒
-// 画像アセットを設定（同一階層に保存されている画像名）
+// 5. ゲーム時間を10秒に、的の表示を1.5倍早く（最小・最大間隔を1.5分の1に加速）
+const GAME_DURATION = 10; 
 const TARGET_IMAGES = ["snafu_logo.png", "wacca_logo.png"];
-const TARGET_INTERVAL_MIN = 800;   // ms
-const TARGET_INTERVAL_MAX = 1600;
-const TARGET_LIFETIME     = 2000;  // ms
+const TARGET_INTERVAL_MIN = 533;   // 800ms / 1.5
+const TARGET_INTERVAL_MAX = 1066;  // 1600ms / 1.5
+const TARGET_LIFETIME     = 1500;  // 的の生存時間も少し短くして難易度UP
 // =============================================
 
 /* ---- STATE ---- */
@@ -580,7 +490,7 @@ const state = {
   score: 0,
   hits: 0,
   misses: 0,
-  combo: 0, // 連撃用カウンター
+  combo: 0,
   playDuration: 0,
   snsClickWacca: false,
   snsClickSnafu: false,
@@ -642,244 +552,4 @@ document.getElementById("btn-start").addEventListener("click", async () => {
 function resetGame() {
   state.score = 0; state.hits = 0; state.misses = 0; state.combo = 0;
   state.timeLeft = GAME_DURATION; state.gameActive = false;
-  state.snsClickWacca = false; state.snsClickSnafu = false;
-  state.submitted = false;
-  document.getElementById("hud-score").textContent = "0";
-  document.getElementById("hud-time").textContent  = String(GAME_DURATION);
-  document.getElementById("hud-time").classList.remove("urgent");
-  document.getElementById("progress-bar").style.width = "100%";
-  document.getElementById("game-field").innerHTML = "";
-  document.getElementById("submitted-msg").style.display = "none";
-  document.getElementById("btn-claim").disabled = false;
-  document.getElementById("email-input").value = "";
-  document.getElementById("btn-skip").style.display = "block";
-  document.getElementById("res-percentile").textContent = "—";
-  document.getElementById("res-percentile-text").textContent = "スコアを集計中…";
-  
-  const comboEl = document.getElementById("combo-overlay");
-  comboEl.textContent = "";
-  comboEl.classList.remove("combo-animate");
-}
-
-function startGame() {
-  state.gameActive = true;
-  state.startTs = Date.now();
-
-  // Countdown timer
-  state.timerInterval = setInterval(() => {
-    state.timeLeft--;
-    const el = document.getElementById("hud-time");
-    el.textContent = String(state.timeLeft);
-    document.getElementById("progress-bar").style.width =
-      ((state.timeLeft / GAME_DURATION) * 100) + "%";
-    if (state.timeLeft <= 10) el.classList.add("urgent");
-    if (state.timeLeft <= 0) endGame();
-  }, 1000);
-
-  spawnNext();
-}
-
-function spawnNext() {
-  if (!state.gameActive) return;
-  const delay = TARGET_INTERVAL_MIN +
-    Math.random() * (TARGET_INTERVAL_MAX - TARGET_INTERVAL_MIN);
-  state.spawnTimeout = setTimeout(() => {
-    spawnTarget();
-    spawnNext();
-  }, delay);
-}
-
-function spawnTarget() {
-  const field  = document.getElementById("game-field");
-  const margin = 56;
-  const x = margin + Math.random() * (window.innerWidth  - margin * 2);
-  const y = 140   + Math.random() * (window.innerHeight  - 240);
-  
-  // ランダムにSNAFUかwaccaのロゴアセットをピックアップ
-  const randomImg = TARGET_IMAGES[Math.floor(Math.random() * TARGET_IMAGES.length)];
-
-  const t = document.createElement("div");
-  t.className = "target";
-  t.style.left = x + "px";
-  t.style.top  = y + "px";
-  
-  // 3Dアセット風の立体ネオンサークル内にロゴをインサート。waccaロゴ(黒地)用に白反転フィルターを自動適用するスタイル
-  const invertStyle = randomImg === "wacca_logo.png" ? "filter: invert(1);" : "";
-  t.innerHTML  = `
-    <div class="target-inner">
-      <img src="${randomImg}" style="${invertStyle}" alt="target">
-    </div>
-  `;
-
-  let hit = false;
-  t.addEventListener("click", (e) => {
-    if (!state.gameActive) return;
-    e.stopPropagation();
-    hit = true;
-    
-    // コンボシステム発火 & 5コンボごとにスコアボーナス
-    state.combo++;
-    state.score += 10 + Math.floor(state.combo / 5) * 5;
-    state.hits++;
-    
-    document.getElementById("hud-score").textContent = state.score;
-    showFeedback(x, y, `HIT +10`, "hit");
-    
-    // 3連撃以上でコンボオーバーレイを演出
-    if (state.combo >= 3) {
-      const comboEl = document.getElementById("combo-overlay");
-      comboEl.textContent = `${state.combo} COMBO!`;
-      
-      // クラスを外しリフローさせてから再アニメーション
-      comboEl.classList.remove("combo-animate");
-      void comboEl.offsetWidth; 
-      comboEl.classList.add("combo-animate");
-      
-      // 10コンボ毎にカラーをピンクにして現場の熱量を煽る
-      if (state.combo % 10 === 0) {
-        comboEl.style.color = "var(--pink)";
-        comboEl.style.textShadow = "0 0 18px #ff2d6b88";
-      } else {
-        comboEl.style.color = "var(--green)";
-        comboEl.style.textShadow = "var(--glow-g)";
-      }
-    }
-
-    // 縮小フェードアウトのアニメーションを付与して削除
-    t.classList.add("hit-vanish");
-    setTimeout(() => { if(t.parentNode) t.remove(); }, 180);
-  });
-
-  field.appendChild(t);
-  setTimeout(() => { if (!hit && t.parentNode) { t.remove(); } }, TARGET_LIFETIME);
-}
-
-// Miss tap on the game field itself
-document.getElementById("screen-game").addEventListener("click", (e) => {
-  if (!state.gameActive) return;
-  if (e.target.closest(".target") || e.target.closest("#hud")) return;
-  
-  state.combo = 0; // 空振りのためコンボ終了
-  state.misses++;
-  showFeedback(e.clientX, e.clientY, "MISS", "miss");
-});
-
-function showFeedback(x, y, text, type) {
-  const fb = document.createElement("div");
-  fb.className = `feedback-pop ${type}`;
-  fb.textContent = text;
-  fb.style.left = x + "px"; fb.style.top = y + "px";
-  document.body.appendChild(fb);
-  setTimeout(() => fb.remove(), 650);
-
-  const burst = document.createElement("div");
-  burst.className = `burst ${type}`;
-  burst.style.left = x + "px"; burst.style.top = y + "px";
-  document.body.appendChild(burst);
-  setTimeout(() => burst.remove(), 420);
-}
-
-function endGame() {
-  state.gameActive = false;
-  clearInterval(state.timerInterval);
-  clearTimeout(state.spawnTimeout);
-  document.getElementById("game-field").innerHTML = "";
-
-  state.playDuration = Math.round((Date.now() - state.startTs) / 1000);
-  const accuracy = state.hits + state.misses > 0
-    ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
-
-  // Populate result
-  document.getElementById("res-score").textContent = state.score;
-  document.getElementById("res-hits").textContent  = state.hits;
-  document.getElementById("res-miss").textContent  = state.misses;
-  document.getElementById("res-acc").textContent   = accuracy + "%";
-
-  show("screen-result");
-}
-
-/* ---- SNS TRACKING ---- */
-document.getElementById("link-snafu").addEventListener("click", () => {
-  state.snsClickSnafu = true;
-});
-document.getElementById("link-wacca").addEventListener("click", () => {
-  state.snsClickWacca = true;
-});
-
-/* ---- SUBMIT (CORS版を使用) ---- */
-async function sendDataWithCors(email) {
-  if (state.submitted) return;
-  state.submitted = true;
-
-  const accuracy = state.hits + state.misses > 0
-    ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
-
-  const payload = {
-    session_id:       state.sessionId,
-    event_type:       state.eventType,
-    play_count:       state.playCount,
-    load_time_ms:     state.loadTimeMs,
-    camera_permission: state.cameraPermission,
-    play_duration_sec: state.playDuration,
-    total_score:      state.score,
-    hit_taps:         state.hits,
-    miss_taps:        state.misses,
-    tap_accuracy:     accuracy,
-    email:            email || "",
-    sns_click_wacca:  state.snsClickWacca,
-    sns_click_snafu:  state.snsClickSnafu,
-  };
-
-  document.getElementById("sending-overlay").classList.add("show");
-
-  try {
-    const res  = await fetch(GAS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" }, // GASのCORSを突破する必須設定
-      body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-
-    if (json.success) {
-      const pct = 100 - json.percentile;
-      document.getElementById("res-percentile").textContent = `上位 ${pct}%`;
-      document.getElementById("res-percentile-text").textContent =
-        `全 ${json.total_players} 人中の記録です`;
-    } else {
-      showPercentileFallback();
-    }
-  } catch (err) {
-    console.error("送信エラー:", err);
-    showPercentileFallback();
-  } finally {
-    document.getElementById("sending-overlay").classList.remove("show");
-  }
-}
-
-function showPercentileFallback() {
-  document.getElementById("res-percentile").textContent = "送信完了";
-  document.getElementById("res-percentile-text").textContent =
-    "スコアを記録しました！";
-}
-
-/* ---- BUTTONS (修正済みイベント) ---- */
-document.getElementById("btn-claim").addEventListener("click", async () => {
-  const email = document.getElementById("email-input").value.trim();
-  document.getElementById("btn-claim").disabled = true;
-  await sendDataWithCors(email);  // CORS対応版を呼び出し
-  document.getElementById("submitted-msg").style.display = "block";
-  document.getElementById("btn-skip").style.display = "none";
-});
-
-document.getElementById("btn-skip").addEventListener("click", async () => {
-  await sendDataWithCors("");  // CORS対応版を呼び出し
-});
-
-document.getElementById("btn-retry").addEventListener("click", () => {
-  resetGame();
-  show("screen-game");
-  startGame();
-});
-</script>
-</body>
-</html>
+  state.snsClickWacca = false
