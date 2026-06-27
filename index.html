@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Shoot & Bang</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- 8bitデジタルフォント(Press Start 2P)を読み込み -->
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   /* ===== TOKENS ===== */
@@ -25,7 +26,6 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
   
-  /* 1. ページ全体に8bitフォントを採用 */
   body { 
     font-family: 'Press Start 2P', monospace; 
     color: var(--white); 
@@ -89,11 +89,9 @@
   .badge-wacca {
     height: 32px;
     object-fit: contain;
-    /* 3. トップのwaccaロゴを美しく白反転 */
     filter: invert(1) drop-shadow(var(--glow-g));
   }
 
-  /* 4. ゲーム名を Shoot & Bang に変更、青白グラデーション化 */
   .start-headline {
     font-size: clamp(24px, 6vw, 36px);
     line-height: 1.3;
@@ -324,7 +322,6 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* 2. 結果画面のSNS遷移リンクを洗練されたロゴ画像ボタンへ変更 */
   .sns-row { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
   .btn-sns {
     flex: 1; padding: 14px 8px; border-radius: var(--r); cursor: pointer;
@@ -472,12 +469,11 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbzGKQuK1k6cdDtbFn9kxGaG
 const SNAFU_IG = "https://www.instagram.com/snafuvintage?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 const WACCA_IG  = "https://www.instagram.com/wacca__jp?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 
-// 5. ゲーム時間を10秒に、的の表示を1.5倍早く（最小・最大間隔を1.5分の1に加速）
 const GAME_DURATION = 10; 
 const TARGET_IMAGES = ["snafu_logo.png", "wacca_logo.png"];
-const TARGET_INTERVAL_MIN = 533;   // 800ms / 1.5
-const TARGET_INTERVAL_MAX = 1066;  // 1600ms / 1.5
-const TARGET_LIFETIME     = 1500;  // 的の生存時間も少し短くして難易度UP
+const TARGET_INTERVAL_MIN = 533;   
+const TARGET_INTERVAL_MAX = 1066;  
+const TARGET_LIFETIME     = 1500;  
 // =============================================
 
 /* ---- STATE ---- */
@@ -552,4 +548,230 @@ document.getElementById("btn-start").addEventListener("click", async () => {
 function resetGame() {
   state.score = 0; state.hits = 0; state.misses = 0; state.combo = 0;
   state.timeLeft = GAME_DURATION; state.gameActive = false;
-  state.snsClickWacca = false
+  state.snsClickWacca = false; state.snsClickSnafu = false;
+  state.submitted = false;
+  document.getElementById("hud-score").textContent = "0";
+  document.getElementById("hud-time").textContent  = String(GAME_DURATION);
+  document.getElementById("hud-time").classList.remove("urgent");
+  document.getElementById("progress-bar").style.width = "100%";
+  document.getElementById("game-field").innerHTML = "";
+  document.getElementById("submitted-msg").style.display = "none";
+  document.getElementById("btn-claim").disabled = false;
+  document.getElementById("email-input").value = "";
+  document.getElementById("btn-skip").style.display = "block";
+  document.getElementById("res-percentile").textContent = "—";
+  document.getElementById("res-percentile-text").textContent = "ANALYZING RECORD...";
+  
+  const comboEl = document.getElementById("combo-overlay");
+  comboEl.textContent = "";
+  comboEl.classList.remove("combo-animate");
+}
+
+function startGame() {
+  state.gameActive = true;
+  state.startTs = Date.now();
+
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    const el = document.getElementById("hud-time");
+    el.textContent = String(state.timeLeft);
+    document.getElementById("progress-bar").style.width =
+      ((state.timeLeft / GAME_DURATION) * 100) + "%";
+    if (state.timeLeft <= 3) el.classList.add("urgent"); 
+    if (state.timeLeft <= 0) endGame();
+  }, 1000);
+
+  spawnNext();
+}
+
+function spawnNext() {
+  if (!state.gameActive) return;
+  const delay = TARGET_INTERVAL_MIN + Math.random() * (TARGET_INTERVAL_MAX - TARGET_INTERVAL_MIN);
+  state.spawnTimeout = setTimeout(() => {
+    spawnTarget();
+    spawnNext();
+  }, delay);
+}
+
+function spawnTarget() {
+  const field  = document.getElementById("game-field");
+  const margin = 56;
+  const x = margin + Math.random() * (window.innerWidth  - margin * 2);
+  const y = 140   + Math.random() * (window.innerHeight  - 240);
+  
+  const randomImg = TARGET_IMAGES[Math.floor(Math.random() * TARGET_IMAGES.length)];
+
+  const t = document.createElement("div");
+  t.className = "target";
+  t.style.left = x + "px";
+  t.style.top  = y + "px";
+  
+  const invertStyle = randomImg === "wacca_logo.png" ? "filter: invert(1);" : "";
+  t.innerHTML = `
+    <div class="target-inner">
+      <img src="${randomImg}" style="${invertStyle}" alt="target">
+    </div>
+  `;
+
+  let hit = false;
+  t.addEventListener("click", (e) => {
+    if (!state.gameActive) return;
+    e.stopPropagation();
+    hit = true;
+    
+    state.combo++;
+    state.score += 10 + Math.floor(state.combo / 5) * 5;
+    state.hits++;
+    
+    document.getElementById("hud-score").textContent = state.score;
+    showFeedback(x, y, `+10`, "hit");
+    
+    if (state.combo >= 3) {
+      const comboEl = document.getElementById("combo-overlay");
+      comboEl.textContent = `${state.combo} COMBO!`;
+      comboEl.classList.remove("combo-animate");
+      void comboEl.offsetWidth; 
+      comboEl.classList.add("combo-animate");
+      
+      if (state.combo % 10 === 0) {
+        comboEl.style.color = "var(--pink)";
+        comboEl.style.textShadow = "0 0 18px #ff2d6b88";
+      } else {
+        comboEl.style.color = "var(--green)";
+        comboEl.style.textShadow = "var(--glow-g)";
+      }
+    }
+
+    t.classList.add("hit-vanish");
+    setTimeout(() => { if(t.parentNode) t.remove(); }, 180);
+  });
+
+  field.appendChild(t);
+  setTimeout(() => { if (!hit && t.parentNode) { t.remove(); } }, TARGET_LIFETIME);
+}
+
+document.getElementById("screen-game").addEventListener("click", (e) => {
+  if (!state.gameActive) return;
+  if (e.target.closest(".target") || e.target.closest("#hud")) return;
+  
+  state.combo = 0;
+  state.misses++;
+  showFeedback(e.clientX, e.clientY, "MISS", "miss");
+});
+
+function showFeedback(x, y, text, type) {
+  const fb = document.createElement("div");
+  fb.className = `feedback-pop ${type}`;
+  fb.textContent = text;
+  fb.style.left = x + "px"; fb.style.top = y + "px";
+  document.body.appendChild(fb);
+  setTimeout(() => fb.remove(), 650);
+
+  const burst = document.createElement("div");
+  burst.className = `burst ${type}`;
+  burst.style.left = x + "px"; burst.style.top = y + "px";
+  document.body.appendChild(burst);
+  setTimeout(() => burst.remove(), 420);
+}
+
+function endGame() {
+  state.gameActive = false;
+  clearInterval(state.timerInterval);
+  clearTimeout(state.spawnTimeout);
+  document.getElementById("game-field").innerHTML = "";
+
+  state.playDuration = Math.round((Date.now() - state.startTs) / 1000);
+  const accuracy = state.hits + state.misses > 0
+    ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
+
+  document.getElementById("res-score").textContent = state.score;
+  document.getElementById("res-hits").textContent  = state.hits;
+  document.getElementById("res-miss").textContent  = state.misses;
+  document.getElementById("res-acc").textContent   = accuracy + "%";
+
+  show("screen-result");
+}
+
+document.getElementById("link-snafu").addEventListener("click", () => {
+  state.snsClickSnafu = true;
+});
+document.getElementById("link-wacca").addEventListener("click", () => {
+  state.snsClickWacca = true;
+});
+
+/* ---- SUBMIT ---- */
+async function sendDataWithCors(email) {
+  if (state.submitted) return;
+  state.submitted = true;
+
+  const accuracy = state.hits + state.misses > 0
+    ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
+
+  const payload = {
+    session_id:       state.sessionId,
+    event_type:       state.eventType,
+    play_count:       state.playCount,
+    load_time_ms:     state.loadTimeMs,
+    camera_permission: state.cameraPermission,
+    play_duration_sec: state.playDuration,
+    total_score:      state.score,
+    hit_taps:         state.hits,
+    miss_taps:        state.misses,
+    tap_accuracy:     accuracy,
+    email:            email || "",
+    sns_click_wacca:  state.snsClickWacca,
+    sns_click_snafu:  state.snsClickSnafu,
+  };
+
+  document.getElementById("sending-overlay").classList.add("show");
+
+  try {
+    const res  = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      const pct = 100 - json.percentile;
+      document.getElementById("res-percentile").textContent = `TOP ${pct}%`;
+      document.getElementById("res-percentile-text").textContent =
+        `FROM ${json.total_players} PLAYERS`;
+    } else {
+      showPercentileFallback();
+    }
+  } catch (err) {
+    console.error("送信エラー:", err);
+    showPercentileFallback();
+  } finally { // 🔥 タイポを 'finaly' から 'finally' へ修正完了！
+    document.getElementById("sending-overlay").classList.remove("show");
+  }
+}
+
+function showPercentileFallback() {
+  document.getElementById("res-percentile").textContent = "RECORDED";
+  document.getElementById("res-percentile-text").textContent = "SCORE REGISTERED!";
+}
+
+/* ---- BUTTONS ---- */
+document.getElementById("btn-claim").addEventListener("click", async () => {
+  const email = document.getElementById("email-input").value.trim();
+  document.getElementById("btn-claim").disabled = true;
+  await sendDataWithCors(email);
+  document.getElementById("submitted-msg").style.display = "block";
+  document.getElementById("btn-skip").style.display = "none";
+});
+
+document.getElementById("btn-skip").addEventListener("click", async () => {
+  await sendDataWithCors("");
+});
+
+document.getElementById("btn-retry").addEventListener("click", () => {
+  resetGame();
+  show("screen-game");
+  startGame();
+});
+</script>
+</body>
+</html>
