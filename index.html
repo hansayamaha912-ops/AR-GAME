@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Shoot & Bang</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- 8bitデジタルフォント(Press Start 2P)を読み込み -->
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   /* ===== TOKENS ===== */
@@ -191,6 +192,11 @@
     background: linear-gradient(135deg, var(--violet), #5a1fd6); color: var(--white);
     box-shadow: var(--glow-v); -webkit-tap-highlight-color: transparent;
   }
+  .btn-skip {
+    background: none; border: none; cursor: pointer; color: var(--dim); font-size: 8px;
+    padding: 12px; width: 100%; text-align: center; font-family: 'Press Start 2P', monospace;
+    -webkit-tap-highlight-color: transparent;
+  }
 
   /* ===== RANKING BOARD SCREEN ===== */
   #screen-leaderboard { gap: 16px; justify-content: flex-start; padding-top: 36px; overflow-y: auto; }
@@ -248,6 +254,7 @@
   <video id="camera-video" autoplay muted playsinline></video>
 </div>
 
+<!-- START SCREEN -->
 <div class="screen" id="screen-start">
   <div class="logo-badge">
     <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
@@ -264,6 +271,7 @@
   <p class="cam-notice">CAMERA ACCESS REQUIRED<br>FOR THE GAMEPLAY</p>
 </div>
 
+<!-- GAME SCREEN -->
 <div class="screen hidden" id="screen-game">
   <div id="hud">
     <div>
@@ -283,6 +291,7 @@
 
 <div id="combo-overlay"></div>
 
+<!-- RESULT SCREEN -->
 <div class="screen hidden" id="screen-result">
   <div class="result-header">
     <div class="result-eyebrow">GAME OVER</div>
@@ -321,6 +330,7 @@
   </div>
 </div>
 
+<!-- RANKING BOARD SCREEN -->
 <div class="screen hidden" id="screen-leaderboard">
   <h2 class="board-title">🏆 TOP 15 RECORDS</h2>
   
@@ -615,7 +625,7 @@ async function sendDataWithCors(email, name) {
       
       // リーダーボード（上位15名）のHTMLを動的生成
       const listEl = document.getElementById("leaderboard-list");
-      listEl.innerHTML = "";
+      listEl.innerHTML = ""; // 🔥 タイポを修正
       
       json.leaderboard.forEach((player, index) => {
         const rank = index + 1;
