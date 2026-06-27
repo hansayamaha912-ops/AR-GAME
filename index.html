@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Shoot & Bang</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<!-- 8bitデジタルフォント(Press Start 2P)を読み込み -->
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   /* ===== TOKENS ===== */
@@ -30,28 +29,16 @@
     font-family: 'Press Start 2P', monospace; 
     color: var(--white); 
     touch-action: manipulation;
-    font-size: 12px;
-    line-height: 1.5;
+    font-size: 11px;
+    line-height: 1.6;
   }
 
   /* ===== CAMERA LAYER ===== */
-  #camera-bg {
-    position: fixed; inset: 0; z-index: 0;
-    background: #0a0a0f;
-  }
-  #camera-video {
-    width: 100%; height: 100%;
-    object-fit: cover; opacity: 0.55;
-    display: none;
-  }
+  #camera-bg { position: fixed; inset: 0; z-index: 0; background: #0a0a0f; }
+  #camera-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.55; display: none; }
   #camera-bg::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0px, transparent 3px,
-      rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px
-    );
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
     pointer-events: none; z-index: 1;
   }
 
@@ -63,282 +50,181 @@
     padding: 24px 20px;
     transition: opacity 0.35s ease;
   }
-  .screen.hidden { opacity: 0; pointer-events: none; }
+  .screen.hidden { opacity: 0; pointer-events: none; display: none !important; }
 
   /* ===== START SCREEN ===== */
   #screen-start { gap: 0; }
 
   .logo-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    margin-bottom: 40px;
-    width: 100%;
-    max-width: 340px;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    margin-bottom: 32px; width: 100%; max-width: 340px;
   }
-  .badge-snafu {
-    height: 54px;
-    object-fit: contain;
-    filter: drop-shadow(var(--glow-v));
-  }
-  .badge-x {
-    font-size: 16px;
-    color: var(--dim);
-  }
-  .badge-wacca {
-    height: 32px;
-    object-fit: contain;
-    filter: invert(1) drop-shadow(var(--glow-g));
+  .badge-snafu { height: 54px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
+  .badge-x { font-size: 16px; color: var(--dim); }
+  .badge-wacca { height: 32px; object-fit: contain; filter: invert(1) drop-shadow(var(--glow-g)); }
+
+  /* 3. TOPにPOP UP EDITIONを追加 */
+  .edition-tag {
+    font-size: 8px; color: var(--pink); letter-spacing: 2px;
+    margin-bottom: 12px; text-shadow: 0 0 8px rgba(255,45,107,0.6);
+    text-transform: uppercase;
   }
 
+  /* 1. タイトルの改行を無くし、1列に並ぶように修正 */
   .start-headline {
-    font-size: clamp(24px, 6vw, 36px);
-    line-height: 1.3;
+    font-size: clamp(18px, 5.5vw, 26px);
+    white-space: nowrap;
     text-align: center; 
-    margin-bottom: 20px;
+    margin-bottom: 40px;
     background: linear-gradient(to bottom, #ffffff 0%, #00d2ff 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 0 20px rgba(0,210,255,0.3);
   }
-  .start-sub {
-    font-size: 10px; color: var(--dim);
-    text-align: center; margin-bottom: 48px; letter-spacing: 0.5px;
-  }
-  .event-tag {
-    display: inline-block;
-    font-size: 10px; font-weight: 700; letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 6px 12px; border-radius: 4px;
-    border: 1px solid var(--violet); color: var(--violet);
-    margin-bottom: 28px;
-  }
 
+  /* 2. PLAYボタンをさらに大きく拡大表示 */
   .btn-primary {
     font-family: 'Press Start 2P', monospace;
-    font-size: 14px;
-    padding: 20px 40px; border-radius: var(--r);
+    font-size: 18px;
+    padding: 24px 64px; border-radius: var(--r);
     border: none; cursor: pointer;
     background: linear-gradient(135deg, var(--green), #00cc6a);
     color: #0a0a0f;
-    box-shadow: var(--glow-g), 0 4px 24px rgba(0,255,136,0.2);
-    transition: transform 0.12s, box-shadow 0.12s;
+    box-shadow: var(--glow-g), 0 0 30px rgba(0,255,136,0.4);
+    transition: transform 0.12s;
     -webkit-tap-highlight-color: transparent;
+    letter-spacing: 1px;
   }
-  .btn-primary:active { transform: scale(0.96); }
-
-  .cam-notice {
-    font-size: 8px; color: var(--dim);
-    text-align: center; margin-top: 24px; line-height: 1.8;
-  }
+  .btn-primary:active { transform: scale(0.95); }
+  .cam-notice { font-size: 7px; color: var(--dim); text-align: center; margin-top: 32px; line-height: 1.8; }
 
   /* ===== GAME SCREEN ===== */
   #screen-game { justify-content: flex-start; padding: 0; }
-
   #hud {
-    width: 100%; display: flex;
-    align-items: center; justify-content: space-between;
-    padding: 48px 20px 16px;
-    background: linear-gradient(to bottom, rgba(10,10,15,0.9), transparent);
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 48px 20px 16px; background: linear-gradient(to bottom, rgba(10,10,15,0.9), transparent);
     position: relative; z-index: 20;
   }
-  .hud-score {
-    font-size: 24px; color: var(--green); text-shadow: var(--glow-g);
-    line-height: 1;
-    margin-top: 4px;
-  }
-  .hud-label { font-size: 9px; color: var(--dim); text-transform: uppercase; }
+  .hud-score { font-size: 22px; color: var(--green); text-shadow: var(--glow-g); line-height: 1; margin-top: 4px; }
+  .hud-label { font-size: 8px; color: var(--dim); text-transform: uppercase; }
   .hud-time-wrap { text-align: right; }
-  .hud-time {
-    font-size: 24px; line-height: 1; color: var(--white);
-    transition: color 0.3s;
-    margin-top: 4px;
-  }
+  .hud-time { font-size: 22px; line-height: 1; color: var(--white); transition: color 0.3s; margin-top: 4px; }
   .hud-time.urgent { color: var(--pink); text-shadow: 0 0 16px #ff2d6b88; }
-
-  #progress-bar-wrap {
-    position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
-    background: rgba(255,255,255,0.08);
-  }
-  #progress-bar {
-    height: 100%;
-    background: linear-gradient(to right, var(--violet), var(--green));
-    transition: width 0.25s linear;
-    width: 100%;
-  }
+  #progress-bar-wrap { position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: rgba(255,255,255,0.08); }
+  #progress-bar { height: 100%; background: linear-gradient(to right, var(--violet), var(--green)); transition: width 0.25s linear; width: 100%; }
 
   /* ===== TARGET ===== */
-  #game-field {
-    position: absolute; inset: 0; z-index: 15;
-    pointer-events: none;
-  }
+  #game-field { position: absolute; inset: 0; z-index: 15; pointer-events: none; }
   .target {
-    position: absolute;
-    width: 76px; height: 76px;
-    transform: translate(-50%, -50%);
-    pointer-events: all;
-    -webkit-tap-highlight-color: transparent;
-    cursor: pointer;
+    position: absolute; width: 76px; height: 76px; transform: translate(-50%, -50%);
+    pointer-events: all; -webkit-tap-highlight-color: transparent; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     animation: targetPop 0.25s cubic-bezier(0.34,1.56,0.64,1) forwards;
   }
   .target-inner {
-    width: 100%; height: 100%;
-    border-radius: 50%;
-    border: 2.5px solid var(--green);
-    background: rgba(10,10,15,0.85);
-    box-shadow: 0 0 16px #00ff8844, inset 0 0 16px #00ff8818;
-    display: flex; align-items: center; justify-content: center;
-    position: relative;
-    overflow: hidden;
-    padding: 12px;
+    width: 100%; height: 100%; border-radius: 50%; border: 2.5px solid var(--green);
+    background: rgba(10,10,15,0.85); box-shadow: 0 0 16px #00ff8844, inset 0 0 16px #00ff8818;
+    display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: 12px;
   }
-  .target-inner img {
-    width: 100%; height: 100%; object-fit: contain;
-  }
+  .target-inner img { width: 100%; height: 100%; object-fit: contain; }
   .target-inner::before {
-    content: '';
-    position: absolute; inset: -8px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(0,255,136,0.25);
-    animation: ringPulse 1.2s ease-out infinite;
+    content: ''; position: absolute; inset: -8px; border-radius: 50%;
+    border: 1.5px solid rgba(0,255,136,0.25); animation: ringPulse 1.2s ease-out infinite;
   }
   @keyframes targetPop {
     from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
     to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   }
-  @keyframes ringPulse {
-    0%   { transform: scale(1); opacity: 0.6; }
-    100% { transform: scale(1.7); opacity: 0; }
-  }
+  @keyframes ringPulse { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.7); opacity: 0; } }
+  .target.hit-vanish { animation: targetVanish 0.18s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; pointer-events: none; }
+  @keyframes targetVanish { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
 
-  .target.hit-vanish {
-    animation: targetVanish 0.18s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
-    pointer-events: none;
-  }
-  @keyframes targetVanish {
-    0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-  }
-
-  /* ===== COMBO POPUP OVERLAY ===== */
+  /* ===== OVERLAYS & FEEDBACK ===== */
   #combo-overlay {
-    position: fixed;
-    top: 35%; left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    font-size: 24px;
-    color: var(--green); text-shadow: var(--glow-g);
-    z-index: 80; pointer-events: none; opacity: 0;
+    position: fixed; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0);
+    font-size: 20px; color: var(--green); text-shadow: var(--glow-g); z-index: 80; pointer-events: none; opacity: 0;
   }
-  .combo-animate {
-    animation: comboPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  }
-  @keyframes comboPop {
-    0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-    30%  { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-    50%  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    100% { transform: translate(-50%, -40%) scale(0.9); opacity: 0; }
-  }
-
-  /* ===== HIT / MISS FEEDBACK ===== */
-  .feedback-pop {
-    position: fixed; z-index: 100;
-    font-size: 14px;
-    pointer-events: none;
-    animation: feedbackAnim 0.6s ease-out forwards;
-    text-shadow: 0 0 12px currentColor;
-    transform: translate(-50%, -50%);
-  }
-  .feedback-pop.hit { color: var(--green); }
-  .feedback-pop.miss { color: var(--pink); }
-  @keyframes feedbackAnim {
-    0%   { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
-    100% { transform: translate(-50%, calc(-50% - 48px)) scale(0.8); opacity: 0; }
-  }
-
-  .burst {
-    position: fixed; z-index: 99;
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    pointer-events: none;
-    transform: translate(-50%, -50%) scale(0);
-    animation: burstAnim 0.4s ease-out forwards;
-  }
-  .burst.hit  { background: radial-gradient(circle, rgba(0,255,136,0.45) 0%, transparent 70%); }
-  .burst.miss { background: radial-gradient(circle, rgba(255,45,107,0.35) 0%, transparent 70%); }
-  @keyframes burstAnim {
-    0%   { transform: translate(-50%, -50%) scale(0); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
-  }
+  .combo-animate { animation: comboPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+  @keyframes comboPop { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 30% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -40%) scale(0.9); opacity: 0; } }
+  .feedback-pop { position: fixed; z-index: 100; font-size: 11px; pointer-events: none; animation: feedbackAnim 0.6s ease-out forwards; text-shadow: 0 0 12px currentColor; transform: translate(-50%, -50%); }
+  .feedback-pop.hit { color: var(--green); } .feedback-pop.miss { color: var(--pink); }
+  @keyframes feedbackAnim { 0% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; } 100% { transform: translate(-50%, calc(-50% - 48px)) scale(0.8); opacity: 0; } }
+  .burst { position: fixed; z-index: 99; width: 80px; height: 80px; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%) scale(0); animation: burstAnim 0.4s ease-out forwards; }
+  .burst.hit { background: radial-gradient(circle, rgba(0,255,136,0.45) 0%, transparent 70%); } .burst.miss { background: radial-gradient(circle, rgba(255,45,107,0.35) 0%, transparent 70%); }
+  @keyframes burstAnim { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; } }
 
   /* ===== RESULT SCREEN ===== */
-  #screen-result { gap: 16px; justify-content: flex-start; padding-top: 40px; overflow-y: auto; }
-
+  #screen-result { gap: 14px; justify-content: flex-start; padding-top: 36px; overflow-y: auto; }
   .result-header { text-align: center; width: 100%; }
-  .result-eyebrow { font-size: 10px; color: var(--pink); margin-bottom: 12px; text-shadow: 0 0 8px #ff2d6b44; }
-  .result-score-big { font-size: 48px; color: var(--green); text-shadow: var(--glow-g); line-height: 1; }
-  .result-score-label { font-size: 9px; color: var(--dim); margin-top: 10px; }
-
-  .stats-row { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .result-eyebrow { font-size: 9px; color: var(--pink); margin-bottom: 8px; }
+  .result-score-big { font-size: 42px; color: var(--green); text-shadow: var(--glow-g); line-height: 1; }
+  .result-score-label { font-size: 8px; color: var(--dim); margin-top: 8px; }
+  .stats-row { display: flex; flex-direction: column; gap: 6px; width: 100%; }
   .stat-card {
     display: flex; justify-content: space-between; align-items: center;
-    background: var(--glass); backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: var(--r); padding: 14px 16px;
+    background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--r); padding: 12px 16px;
   }
-  .stat-val { font-size: 14px; }
-  .stat-lbl { font-size: 9px; color: var(--dim); }
-
+  .stat-val { font-size: 11px; } .stat-lbl { font-size: 8px; color: var(--dim); }
   .percentile-banner {
     width: 100%; background: linear-gradient(135deg, rgba(123,47,255,0.25), rgba(0,255,136,0.12));
-    border: 1px solid rgba(123,47,255,0.5); border-radius: var(--r); padding: 16px; text-align: center;
+    border: 1px solid rgba(123,47,255,0.5); border-radius: var(--r); padding: 14px; text-align: center;
   }
-  .percentile-number { font-size: 18px; color: var(--green); text-shadow: var(--glow-g); }
-  .percentile-text { font-size: 8px; color: var(--dim); margin-top: 8px; line-height: 1.4; }
+  .percentile-number { font-size: 14px; color: var(--green); text-shadow: var(--glow-g); }
+  .percentile-text { font-size: 8px; color: var(--dim); margin-top: 6px; }
 
+  /* フォーム入力周りの最適化 */
   .email-section {
     width: 100%; background: var(--glass); backdrop-filter: blur(12px);
     border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r); padding: 16px;
   }
-  .email-title { font-size: 11px; margin-bottom: 8px; color: var(--white); }
-  .email-desc { font-size: 8px; color: var(--dim); margin-bottom: 14px; line-height: 1.6; }
-  .email-input {
-    width: 100%; padding: 14px; background: rgba(255,255,255,0.05);
-    border: 1.5px solid rgba(255,255,255,0.15); border-radius: 8px; color: var(--white); font-size: 10px;
-    font-family: 'Press Start 2P', monospace; outline: none; margin-bottom: 12px;
+  .email-title { font-size: 10px; margin-bottom: 8px; color: var(--white); }
+  .email-desc { font-size: 7px; color: var(--dim); margin-bottom: 12px; line-height: 1.6; }
+  
+  .form-input {
+    width: 100%; padding: 12px; background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(255,255,255,0.15); border-radius: 8px; color: var(--white); font-size: 9px;
+    font-family: 'Press Start 2P', monospace; outline: none; margin-bottom: 10px;
   }
-  .email-input::placeholder { color: rgba(232,232,224,0.25); }
-  .btn-claim {
-    width: 100%; font-family: 'Press Start 2P', monospace; font-size: 11px;
+  .form-input:focus { border-color: var(--green); }
+
+  .btn-submit-flow {
+    width: 100%; font-family: 'Press Start 2P', monospace; font-size: 10px;
     padding: 14px; border-radius: 8px; border: none; cursor: pointer;
     background: linear-gradient(135deg, var(--violet), #5a1fd6); color: var(--white);
     box-shadow: var(--glow-v); -webkit-tap-highlight-color: transparent;
   }
-  .btn-claim:disabled { opacity: 0.5; }
-  .btn-skip {
-    background: none; border: none; cursor: pointer; color: var(--dim); font-size: 8px;
-    padding: 12px; width: 100%; text-align: center; font-family: 'Press Start 2P', monospace;
-    -webkit-tap-highlight-color: transparent;
-  }
 
-  .sns-row { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
+  /* ===== 6. RANKING BOARD SCREEN (新設) ===== */
+  #screen-leaderboard { gap: 16px; justify-content: flex-start; padding-top: 36px; overflow-y: auto; }
+  .board-title {
+    font-size: 16px; text-align: center; margin-bottom: 12px;
+    background: linear-gradient(to bottom, #ffea00, #ff9900);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .board-container {
+    width: 100%; background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--r); padding: 14px; max-height: 280px; overflow-y: auto;
+  }
+  .board-row {
+    display: flex; justify-content: space-between; padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 9px;
+  }
+  .board-row.top3 { color: var(--green); }
+  .board-row:last-child { border-none; }
+  
+  /* 5. インスタボタンの超強化・見やすさ爆上げスタイル */
+  .sns-row { display: flex; gap: 12px; width: 100%; margin-top: 10px; }
   .btn-sns {
-    flex: 1; padding: 14px 8px; border-radius: var(--r); cursor: pointer;
-    border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04);
+    flex: 1; padding: 18px 8px; border-radius: var(--r); cursor: pointer;
+    border: 2px solid var(--violet); background: rgba(123,47,255,0.15);
+    box-shadow: var(--glow-v);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-    -webkit-tap-highlight-color: transparent; transition: border-color 0.2s;
+    -webkit-tap-highlight-color: transparent; text-decoration: none;
   }
-  .btn-sns:active { border-color: var(--violet); background: rgba(123,47,255,0.12); }
-  .btn-sns img { height: 28px; object-fit: contain; }
-  .sns-lbl { font-size: 7px; color: var(--dim); letter-spacing: -0.5px; }
-
-  .btn-retry {
-    background: none; border: 1.5px solid rgba(255,255,255,0.15);
-    color: var(--dim); font-size: 9px; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%;
-    font-family: 'Press Start 2P', monospace; -webkit-tap-highlight-color: transparent; margin-top: 8px;
-  }
-  .btn-retry:active { border-color: var(--green); color: var(--green); }
+  .btn-sns:active { background: var(--violet); }
+  .btn-sns img { height: 32px; object-fit: contain; }
+  .sns-lbl { font-size: 8px; color: #fff; font-weight: bold; text-shadow: 0 0 6px rgba(255,255,255,0.5); }
 
   #sending-overlay {
     position: fixed; inset: 0; z-index: 200; background: rgba(10,10,15,0.85); backdrop-filter: blur(8px);
@@ -346,20 +232,10 @@
     opacity: 0; pointer-events: none; transition: opacity 0.2s;
   }
   #sending-overlay.show { opacity: 1; pointer-events: all; }
-  .spinner {
-    width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(0,255,136,0.15);
-    border-top-color: var(--green); animation: spin 0.7s linear infinite;
-  }
+  .spinner { width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(0,255,136,0.15); border-top-color: var(--green); animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .sending-text { font-size: 10px; color: var(--dim); }
-
-  #cam-denied {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    z-index: 50; font-size: 8px; color: var(--dim); background: var(--glass);
-    border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); border-radius: 8px;
-    padding: 8px 14px; white-space: nowrap; display: none;
-  }
-  .submitted-msg { font-size: 10px; color: var(--green); text-align: center; padding: 8px 0; display: none; }
+  .sending-text { font-size: 9px; color: var(--dim); }
+  #cam-denied { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 50; font-size: 8px; color: var(--dim); background: var(--glass); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); border-radius: 8px; padding: 8px 14px; white-space: nowrap; display: none; }
 </style>
 </head>
 <body>
@@ -375,9 +251,8 @@
     <img src="wacca_logo.png" class="badge-wacca" alt="wacca">
   </div>
 
-  <div class="event-tag" id="event-tag">— EVENT —</div>
-
-  <h1 class="start-headline">Shoot<br>& Bang</h1>
+  <div class="edition-tag">POP UP EDITION</div>
+  <h1 class="start-headline">Shoot & Bang</h1>
   <p class="start-sub">LIMIT: 10 SECONDS</p>
 
   <button class="btn-primary" id="btn-start">PLAY</button>
@@ -432,12 +307,21 @@
   </div>
 
   <div class="email-section">
-    <div class="email-title">🎁 LIMITED REWARD</div>
-    <div class="email-desc">ENTER EMAIL TO GET NEXT POPUP INFO & COUPON.</div>
-    <input type="email" class="email-input" id="email-input" placeholder="your@email.com" inputmode="email">
-    <button class="btn-claim" id="btn-claim">CLAIM</button>
-    <div class="submitted-msg" id="submitted-msg">✓ SUBMITTED!</div>
-    <button class="btn-skip" id="btn-skip">SKIP AND VISIT INSTAGRAM →</button>
+    <div class="email-title">🎁 ENTER YOUR PROFILE</div>
+    
+    <input type="text" class="form-input" id="nickname-input" placeholder="YOUR NAME (MAX 8)" maxlength="8">
+    <input type="email" class="form-input" id="email-input" placeholder="your@email.com (OPTIONAL)" inputmode="email">
+    
+    <button class="btn-submit-flow" id="btn-submit-flow">SUBMIT & VIEW RANKING</button>
+    <button class="btn-skip" id="btn-skip-flow">SKIP & VIEW RANKING →</button>
+  </div>
+</div>
+
+<div class="screen hidden" id="screen-leaderboard">
+  <h2 class="board-title">🏆 TOP 15 RECORDS</h2>
+  
+  <div class="board-container" id="leaderboard-list">
+    <div style="text-align:center; padding:20px; font-size:8px; color:var(--dim);">LOADING...</div>
   </div>
 
   <div class="sns-row">
@@ -456,7 +340,7 @@
 
 <div id="sending-overlay">
   <div class="spinner"></div>
-  <div class="sending-text">SUBMITTING…</div>
+  <div class="sending-text">TRACKING DATA…</div>
 </div>
 
 <div id="cam-denied">📵 NO CAMERA MODE</div>
@@ -529,7 +413,6 @@ async function startCamera() {
   }
 }
 
-/* ---- SCREEN SWITCH ---- */
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
@@ -555,10 +438,8 @@ function resetGame() {
   document.getElementById("hud-time").classList.remove("urgent");
   document.getElementById("progress-bar").style.width = "100%";
   document.getElementById("game-field").innerHTML = "";
-  document.getElementById("submitted-msg").style.display = "none";
-  document.getElementById("btn-claim").disabled = false;
+  document.getElementById("nickname-input").value = "";
   document.getElementById("email-input").value = "";
-  document.getElementById("btn-skip").style.display = "block";
   document.getElementById("res-percentile").textContent = "—";
   document.getElementById("res-percentile-text").textContent = "ANALYZING RECORD...";
   
@@ -600,18 +481,12 @@ function spawnTarget() {
   const y = 140   + Math.random() * (window.innerHeight  - 240);
   
   const randomImg = TARGET_IMAGES[Math.floor(Math.random() * TARGET_IMAGES.length)];
-
   const t = document.createElement("div");
   t.className = "target";
-  t.style.left = x + "px";
-  t.style.top  = y + "px";
+  t.style.left = x + "px"; t.style.top = y + "px";
   
   const invertStyle = randomImg === "wacca_logo.png" ? "filter: invert(1);" : "";
-  t.innerHTML = `
-    <div class="target-inner">
-      <img src="${randomImg}" style="${invertStyle}" alt="target">
-    </div>
-  `;
+  t.innerHTML = `<div class="target-inner"><img src="${randomImg}" style="${invertStyle}" alt="target"></div>`;
 
   let hit = false;
   t.addEventListener("click", (e) => {
@@ -653,7 +528,6 @@ function spawnTarget() {
 document.getElementById("screen-game").addEventListener("click", (e) => {
   if (!state.gameActive) return;
   if (e.target.closest(".target") || e.target.closest("#hud")) return;
-  
   state.combo = 0;
   state.misses++;
   showFeedback(e.clientX, e.clientY, "MISS", "miss");
@@ -661,8 +535,7 @@ document.getElementById("screen-game").addEventListener("click", (e) => {
 
 function showFeedback(x, y, text, type) {
   const fb = document.createElement("div");
-  fb.className = `feedback-pop ${type}`;
-  fb.textContent = text;
+  fb.className = `feedback-pop ${type}`; fb.textContent = text;
   fb.style.left = x + "px"; fb.style.top = y + "px";
   document.body.appendChild(fb);
   setTimeout(() => fb.remove(), 650);
@@ -681,8 +554,7 @@ function endGame() {
   document.getElementById("game-field").innerHTML = "";
 
   state.playDuration = Math.round((Date.now() - state.startTs) / 1000);
-  const accuracy = state.hits + state.misses > 0
-    ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
+  const accuracy = state.hits + state.misses > 0 ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
 
   document.getElementById("res-score").textContent = state.score;
   document.getElementById("res-hits").textContent  = state.hits;
@@ -692,15 +564,139 @@ function endGame() {
   show("screen-result");
 }
 
-document.getElementById("link-snafu").addEventListener("click", () => {
-  state.snsClickSnafu = true;
-});
-document.getElementById("link-wacca").addEventListener("click", () => {
-  state.snsClickWacca = true;
+document.getElementById("link-snafu").addEventListener("click", () => { state.snsClickSnafu = true; });
+document.getElementById("link-wacca").addEventListener("click", () => { state.snsClickWacca = true; });
+
+/* ---- 4 & 5 & 6. データベース連携・ランキング一括処理送信 ---- */
+async function sendDataAndLoadBoard(nickname, email) {
+  if (state.submitted) return;
+  state.submitted = true;
+
+  const accuracy = state.hits + state.misses > 0 ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
+
+  const payload = {
+    session_id:       state.sessionId,
+    event_type:       state.eventType,
+    play_count:       state.playCount,
+    load_time_ms:     state.loadTimeMs,
+    camera_permission: state.cameraPermission,
+    play_duration_sec: state.playDuration,
+    total_score:      state.score,
+    hit_taps:         state.hits,
+    miss_taps:        state.misses,
+    tap_accuracy:     accuracy,
+    email:            email || "",
+    nickname:         nickname || "ANON",
+    sns_click_wacca:  state.snsClickWacca,
+    sns_click_snafu:  state.snsClickSnafu,
+  };
+
+  document.getElementById("sending-overlay").classList.add("show");
+
+  try {
+    const res  = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      // 5. 送信・スキップ完了後に次のランキング画面へ進みボードをレンダリング
+      show("screen-leaderboard");
+      renderLeaderboard(json.leaderboard);
+    } else {
+      showLeaderboardFallback();
+    }
+  } catch (err) {
+    console.error("通信エラー:", err);
+    showLeaderboardFallback();
+  } finally {
+    document.getElementById("sending-overlay").classList.remove("show");
+  }
+}
+
+// 6. ランキングボードのHTML要素動的生成処理
+function renderLeaderboard(boardData) {
+  const container = document.getElementById("leaderboard-list");
+  container.innerHTML = ""; // 初期化
+
+  if (!boardData || boardPlayerCount(boardData) === 0) {
+    container.innerHTML = `<div style="text-align:center; font-size:8px; color:var(--dim);">NO RECORDS YET</div>`;
+    return;
+  }
+
+  boardDataList(boardData, container);
+}
+
+function boardDataLength(boardData) {
+  return boardData.leaderboard ? boardPlayerListLength(boardData.leaderboard) : 0;
+}
+
+function renderLeaderboardHTML(list) {
+  const container = document.getElementById("leaderboard-list");
+  container.innerHTML = "";
+  list.forEach((player, index) => {
+    const rank = index + 1;
+    const isTop3 = rank <= 3 ? "top3" : "";
+    const row = document.createElement("div");
+    row.className = `board-row ${isTop3}`;
+    row.innerHTML = `
+      <span>${rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : String(rank) + "."} ${player.nickname}</span>
+      <span>${player.score} PTS</span>
+    `;
+    container.appendChild(rowsContainer);
+  });
+}
+
+function showPercentileFallback() {
+  document.getElementById("res-percentile").textContent = "RECORDED";
+  document.getElementById("res-percentile-text").textContent = "SCORE REGISTERED!";
+}
+
+function showLeaderboardData(leaderboard) {
+  const listEl = document.getElementById("leaderboard-list");
+  listetHTML = "";
+  
+  if (!leaderboard || leaderboard.length === 0) {
+    listEl.innerHTML = `<div style="text-align:center; padding:10px; font-size:8px;">NO DATA</div>`;
+    return;
+  }
+
+  leaderboard.forEach((player, index) => {
+    const rank = index + 1;
+    const isTop3 = rank <= 3 ? "top3" : "";
+    const medal = rank === 1 ? "🥇 " : rank === 2 ? "🥈 " : rank === 3 ? "🥉 " : `${rank}. `;
+    
+    tRows += `
+      <div class="board-row ${isTop3}">
+        <span>${rankLabel} ${player.nickname}</span>
+        <span>${player.score} PTS</span>
+      </div>
+    `;
+  });
+  listEl.innerHTML = rowsHtml;
+}
+
+function showPercentileFallback() {
+  document.getElementById("leaderboard-list").innerHTML = 
+    `<div style="text-align:center; padding:20px; font-size:8px; color:var(--green);">SCORE SENT!</div>`;
+}
+
+/* ---- BUTTONS (5. スキップ・送信時の次画面遷移イベント) ---- */
+document.getElementById("btn-submit-flow").addEventListener("click", async () => {
+  let name = document.getElementById("nickname-input").value.trim().toUpperCase();
+  if(!name) name = "ANON";
+  const email = document.getElementById("email-input").value.trim();
+  
+  await sendDataWithCorsFlow(email, name);
 });
 
-/* ---- SUBMIT ---- */
-async function sendDataWithCors(email) {
+document.getElementById("btn-skip-flow").addEventListener("click", async () => {
+  await sendDataWithCors("", "ANON");
+});
+
+async function sendDataWithCors(email, name) {
   if (state.submitted) return;
   state.submitted = true;
 
@@ -719,6 +715,7 @@ async function sendDataWithCors(email) {
     miss_taps:        state.misses,
     tap_accuracy:     accuracy,
     email:            email || "",
+    nickname:         email ? (document.getElementById("nickname-input").value.trim() || "ANON") : "ANON",
     sns_click_wacca:  state.snsClickWacca,
     sns_click_snafu:  state.snsClickSnafu,
   };
@@ -733,39 +730,39 @@ async function sendDataWithCors(email) {
     });
     const json = await res.json();
 
+    show("screen-leaderboard"); // 5. スキップ・送信のタイミングでランキング画面へ遷移
+
     if (json.success) {
       const pct = 100 - json.percentile;
-      document.getElementById("res-percentile").textContent = `TOP ${pct}%`;
-      document.getElementById("res-percentile-text").textContent =
-        `FROM ${json.total_players} PLAYERS`;
+      // 結果値をフォールバックバナーに保管したい場合はここで処理可能
+      
+      // 6. リーダーボード（上位15名）のHTMLを動的生成
+      const listEl = document.getElementById("leaderboard-list");
+      listEl.innerHTML = "";
+      
+      json.leaderboard.forEach((player, index) => {
+        const rank = index + 1;
+        const isTop3 = rank <= 3 ? "top3" : "";
+        const crown = rank === 1 ? "👑 " : rank === 2 ? "🥈 " : rank === 3 ? "🥉 " : `${rank}. `;
+        
+        listEl.innerHTML += `
+          <div class="board-row ${isTop3}">
+            <span>${crown}${player.nickname}</span>
+            <span>${player.score}P</span>
+          </div>
+        `;
+      });
     } else {
-      showPercentileFallback();
+      document.getElementById("leaderboard-list").innerHTML = `<div style="text-align:center;padding:20px;font-size:8px;">ERROR LOADING BOARD</div>`;
     }
   } catch (err) {
     console.error("送信エラー:", err);
-    showPercentileFallback();
-  } finally { // 🔥 タイポを 'finaly' から 'finally' へ修正完了！
+    show("screen-leaderboard");
+    document.getElementById("leaderboard-list").innerHTML = `<div style="text-align:center; padding:20px; font-size:8px; color:var(--pink);">OFFLINE MODE</div>`;
+  } finally {
     document.getElementById("sending-overlay").classList.remove("show");
   }
 }
-
-function showPercentileFallback() {
-  document.getElementById("res-percentile").textContent = "RECORDED";
-  document.getElementById("res-percentile-text").textContent = "SCORE REGISTERED!";
-}
-
-/* ---- BUTTONS ---- */
-document.getElementById("btn-claim").addEventListener("click", async () => {
-  const email = document.getElementById("email-input").value.trim();
-  document.getElementById("btn-claim").disabled = true;
-  await sendDataWithCors(email);
-  document.getElementById("submitted-msg").style.display = "block";
-  document.getElementById("btn-skip").style.display = "none";
-});
-
-document.getElementById("btn-skip").addEventListener("click", async () => {
-  await sendDataWithCors("");
-});
 
 document.getElementById("btn-retry").addEventListener("click", () => {
   resetGame();
