@@ -63,10 +63,10 @@
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ：サイズを3倍に。黒い背景色を貫通してクッキリ白く光らせるCSSハック */
+  /* waccaロゴ：白文字透過Ver素材への完全ネイティブ対応（3倍サイズ化・CSS強制反転をすべて排除） */
   .badge-wacca { 
-    height: 65px; width: auto; object-fit: contain; 
-    filter: brightness(0) invert(1) drop-shadow(var(--glow-g)); 
+    height: 165px; width: auto; object-fit: contain; 
+    filter: drop-shadow(var(--glow-g)); 
   }
 
   .edition-tag {
@@ -143,12 +143,6 @@
     content: ''; position: absolute; inset: -8px; border-radius: 50%;
     border: 1.5px solid rgba(0,255,136,0.25); animation: ringPulse 1.0s ease-out infinite;
   }
-  
-  /* 的の中のwaccaロゴも白くクッキリ光らせる */
-  .target-inner img[src="wacca_logo.png"] {
-    filter: brightness(0) invert(1) !important;
-  }
-
   @keyframes targetPop {
     from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
     to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
@@ -225,7 +219,7 @@
   }
   .board-container {
     width: 100%; background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: var(--r); padding: 14px; max-height: 280px; overflow-y: auto;
+    border-radius: var(--r); padding: 14px; max-height: 200px; overflow-y: auto;
   }
   .board-container::-webkit-scrollbar { width: 4px; }
   .board-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
@@ -236,24 +230,27 @@
   .board-row.top3 { color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,0.4); }
   .board-row:last-child { border-bottom: none; }
   
-  /* 結果画面ロゴ特大プレミアム2分割 */
-  .sns-result-wrap {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    width: 100%; height: 28vh; gap: 12px; margin-top: 10px;
+  /* 新設：ブランドストーリー型没入紹介カードブロック */
+  .brand-stories-wrap {
+    display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px;
   }
-  .btn-sns {
-    width: 100%; flex: 1; border-radius: var(--r); cursor: pointer;
-    border: 2px solid var(--violet); background: rgba(123,47,255,0.12);
-    box-shadow: var(--glow-v);
-    display: flex; align-items: center; justify-content: space-between; padding: 0 32px;
-    -webkit-tap-highlight-color: transparent; text-decoration: none;
+  .brand-story-card {
+    background: var(--glass); backdrop-filter: blur(12px);
+    border: 1px solid var(--violet); box-shadow: var(--glow-v);
+    border-radius: var(--r); padding: 14px 16px; text-decoration: none;
+    color: var(--white); display: flex; flex-direction: column; gap: 6px;
+    transition: background 0.15s; -webkit-tap-highlight-color: transparent;
   }
-  .btn-sns:active { background: var(--violet); }
-  .btn-sns img { height: 40px; width: auto; object-fit: contain; }
-  
-  /* 結果画面のwaccaロゴも透過背景を抜いて真っ白に発光させる */
-  .btn-sns.wacca-invert img { filter: brightness(0) invert(1) !important; }
-  .sns-lbl { font-size: 10px; color: #fff; font-weight: bold; text-shadow: 0 0 6px rgba(255,255,255,0.5); }
+  .brand-story-card:active { background: rgba(123,47,255,0.2); }
+  .brand-story-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand-story-header img { height: 20px; width: auto; object-fit: contain; }
+  .brand-story-header span { font-size: 8px; color: var(--green); text-shadow: var(--glow-g); }
+  .brand-story-body {
+    font-size: 7.5px; line-height: 1.6; color: var(--dim); text-align: justify;
+    font-family: sans-serif; letter-spacing: 0.3px;
+  }
 
   .btn-retry {
     background: none; border: 1.5px solid rgba(255,255,255,0.15);
@@ -281,7 +278,6 @@
   <video id="camera-video" autoplay muted playsinline></video>
 </div>
 
-<!-- START SCREEN -->
 <div class="screen" id="screen-start">
   <div class="logo-badge">
     <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
@@ -298,12 +294,10 @@
   <p class="cam-notice">CAMERA ACCESS REQUIRED<br>FOR THE GAMEPLAY</p>
 </div>
 
-<!-- COUNTDOWN SCREEN -->
 <div class="screen hidden" id="countdown-screen">
   <div class="countdown-num" id="countdown-text">3</div>
 </div>
 
-<!-- GAME SCREEN -->
 <div class="screen hidden" id="screen-game">
   <div id="hud">
     <div>
@@ -323,7 +317,6 @@
 
 <div id="combo-overlay"></div>
 
-<!-- RESULT SCREEN -->
 <div class="screen hidden" id="screen-result">
   <div class="result-header">
     <div class="result-eyebrow">GAME OVER</div>
@@ -362,7 +355,6 @@
   </div>
 </div>
 
-<!-- RANKING BOARD SCREEN -->
 <div class="screen hidden" id="screen-leaderboard">
   <h2 class="board-title">🏆 TOP 15 RECORDS</h2>
   
@@ -370,21 +362,31 @@
     <div style="text-align:center; padding:20px; font-size:8px; color:var(--dim);">LOADING...</div>
   </div>
 
-  <div class="sns-result-wrap">
-    <a class="btn-sns" id="link-snafu" href="#" target="_blank" rel="noopener">
-      <img src="snafu_logo.png" alt="SNAFU">
-      <span class="sns-lbl">SNAFU IG</span>
+  <div class="brand-stories-wrap">
+    <a class="brand-story-card" id="link-snafu" href="#" target="_blank" rel="noopener">
+      <div class="brand-story-header">
+        <img src="snafu_logo.png" alt="SNAFU">
+        <span>INSTAGRAM ➔</span>
+      </div>
+      <p class="brand-story-body">
+        SNAFU VINTAGE selects premium archive items, subculture garments, and rare collectible pieces. We bridge timeless identity with modern street expressions.
+      </p>
     </a>
-    <a class="btn-sns wacca-invert" id="link-wacca" href="#" target="_blank" rel="noopener">
-      <img src="wacca_logo.png" alt="wacca">
-      <span class="sns-lbl">WACCA IG</span>
+    
+    <a class="brand-story-card" id="link-wacca" href="#" target="_blank" rel="noopener">
+      <div class="brand-story-header">
+        <img src="wacca_logo.png" style="height:14px;" alt="wacca">
+        <span>INSTAGRAM ➔</span>
+      </div>
+      <p class="brand-story-body">
+        wacca redefines the cycle of creativity and craft. We deliver minimalist digital product identities, striking brand aesthetics, and borderless design logic for early visionaries.
+      </p>
     </a>
   </div>
 
   <button class="btn-retry" id="btn-retry">RETRY</button>
 </div>
 
-<!-- SENDING OVERLAY -->
 <div id="sending-overlay">
   <div class="spinner"></div>
   <div class="sending-text">TRACKING DATA…</div>
