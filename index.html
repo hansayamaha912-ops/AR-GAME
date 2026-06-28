@@ -55,16 +55,19 @@
   /* ===== START SCREEN ===== */
   #screen-start { gap: 0; }
 
-  /* ロゴ配置：縦並びを廃止し、横一列で完全に並行（中央揃え）にリビルド */
+  /* ロゴ配置：並行横一列に整列 */
   .logo-badge {
     display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 24px;
-    margin-bottom: 40px; width: 100%; height: 30vh; /* 画面縦幅の30%を確保 */
+    margin-bottom: 40px; width: 100%; height: 30vh; 
   }
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ：サイズを3倍（55px → 165px）に爆大化、白反転を上書き保証 */
-  .badge-wacca { height: 165px; object-fit: contain; filter: invert(1) drop-shadow(var(--glow-g)) !important; }
+  /* waccaロゴ：サイズを3倍に。黒い背景色を貫通してクッキリ白く光らせるCSSハック */
+  .badge-wacca { 
+    height: 65px; width: auto; object-fit: contain; 
+    filter: brightness(0) invert(1) drop-shadow(var(--glow-g)); 
+  }
 
   .edition-tag {
     font-size: 8px; color: var(--pink); letter-spacing: 2px;
@@ -98,10 +101,8 @@
   .btn-primary:active { transform: scale(0.95); }
   .cam-notice { font-size: 7px; color: var(--dim); text-align: center; margin-top: 32px; line-height: 1.8; }
 
-  /* ===== COUNTDOWN OVERLAY ===== */
-  #countdown-screen {
-    background: rgba(10,10,15,0.85); backdrop-filter: blur(4px); z-index: 15;
-  }
+  /* ===== COUNTDOWN SCREEN ===== */
+  #countdown-screen { background: rgba(10,10,15,0.85); backdrop-filter: blur(4px); z-index: 15; }
   .countdown-num {
     font-size: 72px; font-weight: 800; color: var(--green); text-shadow: var(--glow-g);
     transform: scale(0.5); opacity: 0; transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -142,6 +143,12 @@
     content: ''; position: absolute; inset: -8px; border-radius: 50%;
     border: 1.5px solid rgba(0,255,136,0.25); animation: ringPulse 1.0s ease-out infinite;
   }
+  
+  /* 的の中のwaccaロゴも白くクッキリ光らせる */
+  .target-inner img[src="wacca_logo.png"] {
+    filter: brightness(0) invert(1) !important;
+  }
+
   @keyframes targetPop {
     from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
     to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
@@ -150,7 +157,7 @@
   .target.hit-vanish { animation: targetVanish 0.15s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; pointer-events: none; }
   @keyframes targetVanish { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
 
-  /* ===== OVERLAYS & FEEDBACK ===== */
+  /* ===== FEEDBACKS ===== */
   #combo-overlay {
     position: fixed; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0);
     font-size: 20px; color: var(--green); text-shadow: var(--glow-g); z-index: 80; pointer-events: none; opacity: 0;
@@ -184,21 +191,19 @@
   .percentile-number { font-size: 14px; color: var(--green); text-shadow: var(--glow-g); }
   .percentile-text { font-size: 8px; color: var(--dim); margin-top: 6px; }
 
-  /* フォーム入力周り */
+  /* フォーム入力 */
   .email-section {
     width: 100%; background: var(--glass); backdrop-filter: blur(12px);
     border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r); padding: 16px;
   }
   .email-title { font-size: 10px; margin-bottom: 8px; color: var(--white); }
   .email-desc { font-size: 7px; color: var(--dim); margin-bottom: 12px; line-height: 1.6; }
-  
   .form-input {
     width: 100%; padding: 12px; background: rgba(255,255,255,0.05);
     border: 1.5px solid rgba(255,255,255,0.15); border-radius: 8px; color: var(--white); font-size: 9px;
     font-family: 'Press Start 2P', monospace; outline: none; margin-bottom: 10px;
   }
   .form-input:focus { border-color: var(--green); }
-
   .btn-submit-flow {
     width: 100%; font-family: 'Press Start 2P', monospace; font-size: 10px;
     padding: 14px; border-radius: 8px; border: none; cursor: pointer;
@@ -211,7 +216,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ===== RANKING BOARD SCREEN ===== */
+  /* ===== RANKING SCREEN ===== */
   #screen-leaderboard { gap: 16px; justify-content: flex-start; padding-top: 36px; overflow-y: auto; }
   .board-title {
     font-size: 16px; text-align: center; margin-bottom: 12px;
@@ -231,7 +236,7 @@
   .board-row.top3 { color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,0.4); }
   .board-row:last-child { border-bottom: none; }
   
-  /* 結果画面ロゴ拡大：画面の30%を占める2分割特大プレミアムカード仕様 */
+  /* 結果画面ロゴ特大プレミアム2分割 */
   .sns-result-wrap {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     width: 100%; height: 28vh; gap: 12px; margin-top: 10px;
@@ -245,7 +250,9 @@
   }
   .btn-sns:active { background: var(--violet); }
   .btn-sns img { height: 40px; width: auto; object-fit: contain; }
-  .btn-sns.wacca-invert img { filter: invert(1); }
+  
+  /* 結果画面のwaccaロゴも透過背景を抜いて真っ白に発光させる */
+  .btn-sns.wacca-invert img { filter: brightness(0) invert(1) !important; }
   .sns-lbl { font-size: 10px; color: #fff; font-weight: bold; text-shadow: 0 0 6px rgba(255,255,255,0.5); }
 
   .btn-retry {
@@ -274,6 +281,7 @@
   <video id="camera-video" autoplay muted playsinline></video>
 </div>
 
+<!-- START SCREEN -->
 <div class="screen" id="screen-start">
   <div class="logo-badge">
     <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
@@ -290,10 +298,12 @@
   <p class="cam-notice">CAMERA ACCESS REQUIRED<br>FOR THE GAMEPLAY</p>
 </div>
 
+<!-- COUNTDOWN SCREEN -->
 <div class="screen hidden" id="countdown-screen">
   <div class="countdown-num" id="countdown-text">3</div>
 </div>
 
+<!-- GAME SCREEN -->
 <div class="screen hidden" id="screen-game">
   <div id="hud">
     <div>
@@ -313,6 +323,7 @@
 
 <div id="combo-overlay"></div>
 
+<!-- RESULT SCREEN -->
 <div class="screen hidden" id="screen-result">
   <div class="result-header">
     <div class="result-eyebrow">GAME OVER</div>
@@ -351,6 +362,7 @@
   </div>
 </div>
 
+<!-- RANKING BOARD SCREEN -->
 <div class="screen hidden" id="screen-leaderboard">
   <h2 class="board-title">🏆 TOP 15 RECORDS</h2>
   
@@ -372,6 +384,7 @@
   <button class="btn-retry" id="btn-retry">RETRY</button>
 </div>
 
+<!-- SENDING OVERLAY -->
 <div id="sending-overlay">
   <div class="spinner"></div>
   <div class="sending-text">TRACKING DATA…</div>
@@ -381,21 +394,15 @@
 <div id="cam-denied">📵 NO CAMERA MODE</div>
 
 <script>
-// =============================================
-//  ⚠️ CONFIG — 常に最新のデプロイURLを使用してください
-// =============================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzGKQuK1k6cdDtbFn9kxGaGeRE-DGY3Ow4dxDqWXoT2z7Z2izB7dti4RWHrwoG7Xq6k/exec";
 const SNAFU_IG = "https://www.instagram.com/snafuvintage?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 const WACCA_IG  = "https://www.instagram.com/wacca__jp?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 
 const GAME_DURATION = 10; 
 const TARGET_IMAGES = ["snafu_logo.png", "wacca_logo.png"];
-
-// 反応限界ハック：250ms〜500msの超乱打スポーン
 const TARGET_INTERVAL_MIN = 250;   
 const TARGET_INTERVAL_MAX = 500;  
 const TARGET_LIFETIME     = 1200; 
-// =============================================
 
 /* ---- STATE ---- */
 const state = {
@@ -451,13 +458,11 @@ function show(id) {
   document.getElementById(id).classList.remove("hidden");
 }
 
-/* ---- START (3,2,1,BANGカウントダウンロジック) ---- */
+/* ---- START (3,2,1,BANGカウントダウン) ---- */
 document.getElementById("btn-start").addEventListener("click", async () => {
   state.loadTimeMs = Math.round(performance.now() - state.pageLoadTs);
   await startCamera();
   resetGame();
-  
-  // 開始前カウントダウン画面の展開
   show("countdown-screen");
   runStartCountdown();
 });
@@ -470,22 +475,18 @@ function runStartCountdown() {
   const triggerNextStep = () => {
     if (step < counts.length) {
       cdEl.textContent = counts[step];
-      cdEl.className = "countdown-num"; // リセット
+      cdEl.className = "countdown-num"; 
       if (counts[step] === "BANG!") cdEl.classList.add("bang");
-      
-      // 魔法のリフローでアニメーションを強制トリガー
       void cdEl.offsetWidth;
       cdEl.classList.add("pop");
 
-      // 脳汁ハプティクス：カウント毎にブルッ、BANG!で強めに振動
       if (navigator.vibrate) {
         navigator.vibrate(counts[step] === "BANG!" ? [40, 30, 40] : 20);
       }
 
       step++;
-      setTimeout(triggerNextStep, 800); // 0.8秒刻みの小気味よいテンポ
+      setTimeout(triggerNextStep, 800); 
     } else {
-      // カウントダウン終了、ゲームへ突入
       show("screen-game");
       startGame();
     }
@@ -536,12 +537,9 @@ function spawnNext() {
   const delay = TARGET_INTERVAL_MIN + Math.random() * (TARGET_INTERVAL_MAX - TARGET_INTERVAL_MIN);
   state.spawnTimeout = setTimeout(() => {
     spawnTarget();
-    
-    // ツインスポーンハック：35%の確率で少しずらして同時出現
     if (Math.random() < 0.35) {
       setTimeout(() => { if (state.gameActive) spawnTarget(); }, 80);
     }
-    
     spawnNext();
   }, delay);
 }
@@ -557,8 +555,7 @@ function spawnTarget() {
   t.className = "target";
   t.style.left = x + "px"; t.style.top = y + "px";
   
-  const invertStyle = randomImg === "wacca_logo.png" ? "filter: invert(1);" : "";
-  t.innerHTML = `<div class="target-inner"><img src="${randomImg}" style="${invertStyle}" alt="target"></div>`;
+  t.innerHTML = `<div class="target-inner"><img src="${randomImg}" alt="target"></div>`;
 
   let hit = false;
   t.addEventListener("click", (e) => {
@@ -669,12 +666,10 @@ async function sendDataWithCors(email, name) {
     sns_click_snafu:  state.snsClickSnafu,
   };
 
-  // インジケータ表示リセット
   const pctEl = document.getElementById("loading-pct");
   pctEl.textContent = "0%";
   document.getElementById("sending-overlay").classList.add("show");
 
-  // 0%〜95% デジタル擬似進捗タイマーを始動
   let currentPct = 0;
   const pctInterval = setInterval(() => {
     if (currentPct < 95) {
@@ -691,19 +686,15 @@ async function sendDataWithCors(email, name) {
       body: JSON.stringify(payload),
     });
     
-    // 【CORSエラー対策ハック】
-    // GASが内部エラー(500)を起こすとJSONパースで落ちるため、レスポンスの正常性を先に確認
     if (!res.ok) {
-      throw new Error("GAS Internal Crash");
+      throw new Error("GAS_CRASH");
     }
     
     const json = await res.json();
 
-    // 取得完了時に100%へ即座にコミット
     clearInterval(pctInterval);
     pctEl.textContent = "100%";
 
-    // 0.15秒の余韻ののち、完璧に同期して画面遷移
     setTimeout(() => {
       show("screen-leaderboard"); 
 
