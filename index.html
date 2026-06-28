@@ -55,14 +55,16 @@
   /* ===== START SCREEN ===== */
   #screen-start { gap: 0; }
 
-  /* ロゴが画面の30%を占めるように巨大化 */
+  /* ロゴ配置：縦並びを廃止し、横一列で完全に並行（中央揃え）にリビルド */
   .logo-badge {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-    margin-bottom: 40px; width: 100%; height: 30vh; 
+    display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 24px;
+    margin-bottom: 40px; width: 100%; height: 30vh; /* 画面縦幅の30%を確保 */
   }
-  .badge-snafu { height: 90px; max-width: 80%; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
-  .badge-x { font-size: 20px; color: var(--pink); text-shadow: 0 0 10px var(--pink); }
-  .badge-wacca { height: 55px; max-width: 70%; object-fit: contain; filter: invert(1) drop-shadow(var(--glow-g)); } /* 白反転完全適用 */
+  .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
+  .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
+  
+  /* waccaロゴ：サイズを3倍（55px → 165px）に爆大化、白反転を上書き保証 */
+  .badge-wacca { height: 165px; object-fit: contain; filter: invert(1) drop-shadow(var(--glow-g)) !important; }
 
   .edition-tag {
     font-size: 8px; color: var(--pink); letter-spacing: 2px;
@@ -96,7 +98,7 @@
   .btn-primary:active { transform: scale(0.95); }
   .cam-notice { font-size: 7px; color: var(--dim); text-align: center; margin-top: 32px; line-height: 1.8; }
 
-  /* ===== COUNTDOWN OVERLAY (新設) ===== */
+  /* ===== COUNTDOWN OVERLAY ===== */
   #countdown-screen {
     background: rgba(10,10,15,0.85); backdrop-filter: blur(4px); z-index: 15;
   }
@@ -688,6 +690,13 @@ async function sendDataWithCors(email, name) {
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload),
     });
+    
+    // 【CORSエラー対策ハック】
+    // GASが内部エラー(500)を起こすとJSONパースで落ちるため、レスポンスの正常性を先に確認
+    if (!res.ok) {
+      throw new Error("GAS Internal Crash");
+    }
+    
     const json = await res.json();
 
     // 取得完了時に100%へ即座にコミット
