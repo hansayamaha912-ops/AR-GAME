@@ -55,15 +55,15 @@
   /* ===== START SCREEN ===== */
   #screen-start { gap: 0; }
 
-  /* ロゴ配置：並行横一列に整列 */
+  /* ロゴ配置：縦並びを廃止し、横一列で完全に並行（中央揃え）にリビルド */
   .logo-badge {
     display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 24px;
-    margin-bottom: 40px; width: 100%; height: 30vh; 
+    margin-bottom: 40px; width: 100%; height: 30vh; /* 画面縦幅の30%を確保 */
   }
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ：白文字透過Ver素材への完全ネイティブ対応（3倍サイズ化・CSS強制反転をすべて排除） */
+  /* waccaロゴ：サイズを3倍に大型化。白文字透過Ver素材への完全ネイティブ対応 */
   .badge-wacca { 
     height: 165px; width: auto; object-fit: contain; 
     filter: drop-shadow(var(--glow-g)); 
@@ -101,8 +101,10 @@
   .btn-primary:active { transform: scale(0.95); }
   .cam-notice { font-size: 7px; color: var(--dim); text-align: center; margin-top: 32px; line-height: 1.8; }
 
-  /* ===== COUNTDOWN SCREEN ===== */
-  #countdown-screen { background: rgba(10,10,15,0.85); backdrop-filter: blur(4px); z-index: 15; }
+  /* ===== COUNTDOWN OVERLAY ===== */
+  #countdown-screen {
+    background: rgba(10,10,15,0.85); backdrop-filter: blur(4px); z-index: 15;
+  }
   .countdown-num {
     font-size: 72px; font-weight: 800; color: var(--green); text-shadow: var(--glow-g);
     transform: scale(0.5); opacity: 0; transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -151,7 +153,7 @@
   .target.hit-vanish { animation: targetVanish 0.15s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; pointer-events: none; }
   @keyframes targetVanish { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
 
-  /* ===== FEEDBACKS ===== */
+  /* ===== OVERLAYS & FEEDBACK ===== */
   #combo-overlay {
     position: fixed; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0);
     font-size: 20px; color: var(--green); text-shadow: var(--glow-g); z-index: 80; pointer-events: none; opacity: 0;
@@ -192,12 +194,14 @@
   }
   .email-title { font-size: 10px; margin-bottom: 8px; color: var(--white); }
   .email-desc { font-size: 7px; color: var(--dim); margin-bottom: 12px; line-height: 1.6; }
+  
   .form-input {
     width: 100%; padding: 12px; background: rgba(255,255,255,0.05);
     border: 1.5px solid rgba(255,255,255,0.15); border-radius: 8px; color: var(--white); font-size: 9px;
     font-family: 'Press Start 2P', monospace; outline: none; margin-bottom: 10px;
   }
   .form-input:focus { border-color: var(--green); }
+
   .btn-submit-flow {
     width: 100%; font-family: 'Press Start 2P', monospace; font-size: 10px;
     padding: 14px; border-radius: 8px; border: none; cursor: pointer;
@@ -210,7 +214,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ===== RANKING SCREEN ===== */
+  /* ===== RANKING BOARD SCREEN ===== */
   #screen-leaderboard { gap: 16px; justify-content: flex-start; padding-top: 36px; overflow-y: auto; }
   .board-title {
     font-size: 16px; text-align: center; margin-bottom: 12px;
@@ -230,7 +234,7 @@
   .board-row.top3 { color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,0.4); }
   .board-row:last-child { border-bottom: none; }
   
-  /* 新設：ブランドストーリー型没入紹介カードブロック */
+  /* ブランドストーリー型没入紹介カードブロック */
   .brand-stories-wrap {
     display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px;
   }
@@ -396,6 +400,9 @@
 <div id="cam-denied">📵 NO CAMERA MODE</div>
 
 <script>
+// =============================================
+//  ⚠️ CONFIG — 最新のデプロイURLを使用してください
+// =============================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzGKQuK1k6cdDtbFn9kxGaGeRE-DGY3Ow4dxDqWXoT2z7Z2izB7dti4RWHrwoG7Xq6k/exec";
 const SNAFU_IG = "https://www.instagram.com/snafuvintage?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 const WACCA_IG  = "https://www.instagram.com/wacca__jp?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
@@ -405,6 +412,7 @@ const TARGET_IMAGES = ["snafu_logo.png", "wacca_logo.png"];
 const TARGET_INTERVAL_MIN = 250;   
 const TARGET_INTERVAL_MAX = 500;  
 const TARGET_LIFETIME     = 1200; 
+// =============================================
 
 /* ---- STATE ---- */
 const state = {
