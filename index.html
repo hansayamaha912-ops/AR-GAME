@@ -61,8 +61,8 @@
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ：白透過.pngへ完全統一・プレーン表示 */
-  .badge-wacca { height: 165px; width: auto; object-fit: contain; }
+  /* waccaロゴ表示領域：絶対に見えるように設定 */
+  .badge-wacca { height: 165px; width: auto; object-fit: contain; min-width: 100px; min-height: 50px; background: rgba(255,255,255,0.02); }
 
   .edition-tag {
     font-size: 8px; color: var(--pink); letter-spacing: 2px;
@@ -237,9 +237,9 @@
   }
   .btn-retry:active { border-color: var(--green); color: var(--green); }
 
-  /* ===== TRANSMISSION OVERLAY (WITH TRACKING LOGS) ===== */
+  /* ===== TRANSMISSION OVERLAY ===== */
   #sending-overlay {
-    position: fixed; inset: 0; z-index: 200; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px);
+    position: fixed; inset: 0; z-index: 200; background: rgba(10,10,15,0.94); backdrop-filter: blur(12px);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
     opacity: 0; pointer-events: none; transition: opacity 0.2s;
   }
@@ -247,11 +247,10 @@
   .spinner { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(0,255,136,0.1); border-top-color: var(--green); animation: spin 0.6s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   
-  /* デバッグ・通信パイプライン可視化ログ表示領域 */
   .debug-log-console {
     width: 85%; background: #000; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
     padding: 12px; font-family: monospace; font-size: 9px; color: #00ff00; text-align: left;
-    max-height: 110px; overflow-y: auto; line-height: 1.4; box-shadow: inset 0 0 10px #000;
+    max-height: 140px; overflow-y: auto; line-height: 1.4; box-shadow: inset 0 0 10px #000;
   }
   .log-line { margin-bottom: 4px; border-left: 2px solid var(--violet); padding-left: 6px; }
   .log-line.err { color: var(--pink); border-left-color: var(--pink); }
@@ -270,7 +269,7 @@
   <div class="logo-badge">
     <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
     <span class="badge-x">×</span>
-    <img src="白透過.png" class="badge-wacca" alt="wacca">
+    <img src="白透過.png" class="badge-wacca" id="main-wacca-logo" alt="wacca" onerror="handleWaccaLogoError(this)">
   </div>
 
   <div class="edition-tag">POP UP EDITION</div>
@@ -363,7 +362,7 @@
     
     <a class="brand-story-card" id="link-wacca" href="#" target="_blank" rel="noopener">
       <div class="brand-story-header">
-        <img src="白透過.png" style="height:20px;" alt="wacca">
+        <img src="白透過.png" style="height:20px;" id="story-wacca-logo" alt="wacca" onerror="handleWaccaLogoError(this)">
         <span>INSTAGRAM ➔</span>
       </div>
       <p class="brand-story-body">
@@ -386,12 +385,32 @@
 <div id="cam-denied">📵 NO CAMERA MODE</div>
 
 <script>
+// 画像読み込みエラー時の救済ロジック(サーバー上にどの名前で存在しても自動探索)
+function handleWaccaLogoError(imgElement) {
+  const fallbacks = ["黒白.png", "黒白.PNG", "白透過.png", "白透過.PNG", "wacca_logo.png", "wacca_logo.PNG"];
+  if (!imgElement.dataset.attempt) imgElement.dataset.attempt = "0";
+  let attempt = parseInt(imgElement.dataset.attempt);
+  if (attempt < fallbacks.length) {
+    const nextSrc = fallbacks[attempt];
+    imgElement.dataset.attempt = String(attempt + 1);
+    imgElement.src = nextSrc;
+  } else {
+    // すべてダメならテキスト代替
+    imgElement.style.display = "none";
+    const txtNode = document.createElement("span");
+    txtNode.textContent = "WACCA";
+    txtNode.style.fontSize = "20px";
+    txtNode.style.fontWeight = "bold";
+    txtNode.style.letterSpacing = "2px";
+    imgElement.parentNode.appendChild(txtNode);
+  }
+}
+
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzGKQuK1k6cdDtbFn9kxGaGeRE-DGY3Ow4dxDqWXoT2z7Z2izB7dti4RWHrwoG7Xq6k/exec";
 const SNAFU_IG = "https://www.instagram.com/snafuvintage?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 const WACCA_IG  = "https://www.instagram.com/wacca__jp?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 
 const GAME_DURATION = 10; 
-const TARGET_IMAGES = ["snafu_logo.png", "wacca_logo.png"];
 const TARGET_INTERVAL_MIN = 250;   
 const TARGET_INTERVAL_MAX = 500;  
 const TARGET_LIFETIME     = 1200; 
@@ -538,14 +557,12 @@ function spawnTarget() {
   const x = margin + Math.random() * (window.innerWidth  - margin * 2);
   const y = 140   + Math.random() * (window.innerHeight  - 240);
   
-  const randomImg = TARGET_IMAGES[Math.floor(Math.random() * TARGET_IMAGES.length)];
+  const randomImg = Math.random() < 0.5 ? "snafu_logo.png" : "白透過.png";
   const t = document.createElement("div");
   t.className = "target";
   t.style.left = x + "px"; t.style.top = y + "px";
   
-  // 的の中の画像パスも「白透過.png」を完全指定
-  const finalSrc = randomImg === 'wacca_logo.png' ? '白透過.png' : randomImg;
-  t.innerHTML = `<div class="target-inner"><img src="${finalSrc}" alt="target"></div>`;
+  t.innerHTML = `<div class="target-inner"><img src="${randomImg}" alt="target" onerror="handleWaccaLogoError(this)"></div>`;
 
   let hit = false;
   t.addEventListener("click", (e) => {
@@ -611,14 +628,14 @@ function endGame() {
 document.getElementById("link-snafu").addEventListener("click", () => { state.snsClickSnafu = true; });
 document.getElementById("link-wacca").addEventListener("click", () => { state.snsClickWacca = true; });
 
-/* ===== ☠️ 超硬化リターン強制・追跡型通信コアエンジン ☠️ ===== */
+/* ===== ☠️ 順番不問・完全汎用オブジェクト型データ送信エンジン ☠️ ===== */
 async function sendDataWithCors(email, name) {
   if (state.submitted) return;
   state.submitted = true;
 
   const accuracy = state.hits + state.misses > 0 ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
 
-  // ペイロード（JSON）ビルド
+  // 配列の順番ズレによるGASクラッシュを防ぐため、完全なオブジェクトとして送信
   const payload = {
     session_id:        String(state.sessionId),
     event_type:        String(state.eventType),
@@ -636,10 +653,8 @@ async function sendDataWithCors(email, name) {
     sns_click_snafu:   Boolean(state.snsClickSnafu)
   };
 
-  // 初期化ログ
   document.getElementById("debug-console").innerHTML = "";
-  addConsoleLog("🔥 パイプライン接続開始...");
-  addConsoleLog(`データ検証: Score=${payload.total_score}, Name=${payload.nickname}`);
+  addConsoleLog("🚀 パイプライン接続開始...");
 
   const pctEl = document.getElementById("loading-pct");
   pctEl.textContent = "0%";
@@ -655,34 +670,33 @@ async function sendDataWithCors(email, name) {
   }, 40);
 
   try {
-    addConsoleLog(`GASへPOST送信中... URL: ${GAS_URL.substring(0, 45)}...`);
+    addConsoleLog("GASサーバーへデータを同期中...");
     
-    // GASのセキュリティ制限を破壊するため text/plain で文字列化して完全透過送信
     const res = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload)
     });
 
-    addConsoleLog(`HTTPレスポンス受信: Status=${res.status} (${res.statusText})`);
+    addConsoleLog(`HTTPレスポンスコード: ${res.status}`);
     
     if (!res.ok) {
-      throw new Error(`HTTP_BAD_STATUS: ${res.status}`);
+      throw new Error(`HTTP_ERROR: ${res.status}`);
     }
 
-    addConsoleLog("JSON文字列の抽出・リターン解析中...");
+    addConsoleLog("リターンランキングデータを解析中...");
     const rawText = await res.text();
     
     let json;
     try {
       json = JSON.parse(rawText);
     } catch(e) {
-      throw new Error("GAS側が有効なJSONを返していません(CORSまたは構文エラー)。戻り値: " + rawText.substring(0, 40));
+      throw new Error("GAS側コードのエラー画面が返却されました。GASの修正が必要です。");
     }
 
     clearInterval(pctInterval);
     pctEl.textContent = "100%";
-    addConsoleLog("➔ 【成功】転記完了・データベース同期成功！");
+    addConsoleLog("➔ 【成功】すべてのデータの転記と取得が完了しました！");
 
     setTimeout(() => {
       show("screen-leaderboard"); 
@@ -707,7 +721,6 @@ async function sendDataWithCors(email, name) {
           `;
         });
       } else {
-        addConsoleLog("GAS実行は成功しましたがsuccessフラグがfalseです", true);
         showLeaderboardFallback(name);
       }
     }, 600);
@@ -715,17 +728,17 @@ async function sendDataWithCors(email, name) {
   } catch (err) {
     clearInterval(pctInterval);
     pctEl.textContent = "ERR";
-    addConsoleLog(`❌ クラッシュ発生: ${err.message}`, true);
-    console.error("送信エラー詳細:", err);
+    addConsoleLog(`❌ クラッシュ検出: ${err.message}`, true);
+    addConsoleLog(`【対策】GAS側のコードとデプロイの確認が必要です。`, true);
     
     setTimeout(() => {
       show("screen-leaderboard");
       showLeaderboardFallback(name);
-    }, 2500); // エラーメッセージをユーザーが視認できるようにディレイを設定
+    }, 4000); 
   } finally {
     setTimeout(() => {
       document.getElementById("sending-overlay").classList.remove("show");
-    }, 2800);
+    }, 4200);
   }
 }
 
