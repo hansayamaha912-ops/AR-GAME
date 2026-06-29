@@ -1,753 +1,111 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Shoot & Bang</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-<style>
-  /* ===== TOKENS ===== */
-  :root {
-    --bg: #0a0a0f;
-    --green: #00ff88;
-    --violet: #7b2fff;
-    --pink: #ff2d6b;
-    --white: #e8e8e0;
-    --dim: rgba(232,232,224,0.45);
-    --glass: rgba(10,10,15,0.75);
-    --glow-g: 0 0 18px #00ff8866, 0 0 40px #00ff8822;
-    --glow-v: 0 0 18px #7b2fff88, 0 0 40px #7b2fff33;
-    --r: 12px;
-  }
+// GAS - 双方向リアルタイムランキング通信・完全大開通版
+const SHEET_NAME = "GameLogs";
 
-  /* ===== RESET ===== */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
-  
-  body { 
-    font-family: 'Press Start 2P', monospace; 
-    color: var(--white); 
-    touch-action: manipulation;
-    font-size: 11px;
-    line-height: 1.6;
-  }
-
-  /* ===== CAMERA LAYER ===== */
-  #camera-bg { position: fixed; inset: 0; z-index: 0; background: #0a0a0f; }
-  #camera-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.55; display: none; }
-  #camera-bg::after {
-    content: ''; position: absolute; inset: 0;
-    background: repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
-    pointer-events: none; z-index: 1;
-  }
-
-  /* ===== SCREEN LAYER ===== */
-  .screen {
-    position: fixed; inset: 0; z-index: 10;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 24px 20px;
-    transition: opacity 0.35s ease;
-  }
-  .screen.hidden { opacity: 0; pointer-events: none; display: none !important; }
-
-  /* ===== START SCREEN ===== */
-  #screen-start { gap: 0; }
-  .logo-badge {
-    display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 24px;
-    margin-bottom: 40px; width: 100%; height: 30vh; 
-  }
-  .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
-  .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
-  
-  /* waccaロゴ：黒背景でもスナフと同等にパキッと白く直置き発光させるスタイル調整 */
-  .badge-wacca { 
-    height: 165px; width: auto; object-fit: contain;
-    filter: brightness(2.5) contrast(1.2) drop-shadow(var(--glow-g)) !important;
-  }
-
-  .edition-tag {
-    font-size: 8px; color: var(--pink); letter-spacing: 2px;
-    margin-bottom: 12px; text-shadow: 0 0 8px rgba(255,45,107,0.6);
-    text-transform: uppercase;
-  }
-
-  .start-headline {
-    font-size: clamp(18px, 5.5vw, 26px);
-    white-space: nowrap; text-align: center; margin-bottom: 40px;
-    background: linear-gradient(to bottom, #ffffff 0%, #00d2ff 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 20px rgba(0,210,255,0.3);
-  }
-
-  .btn-primary {
-    font-family: 'Press Start 2P', monospace; font-size: 18px;
-    padding: 24px 64px; border-radius: var(--r); border: none; cursor: pointer;
-    background: linear-gradient(135deg, var(--green), #00cc6a); color: #0a0a0f;
-    box-shadow: var(--glow-g), 0 0 30px rgba(0,255,136,0.4);
-    transition: transform 0.12s; -webkit-tap-highlight-color: transparent; letter-spacing: 1px;
-  }
-  .btn-primary:active { transform: scale(0.95); }
-  .cam-notice { font-size: 7px; color: var(--dim); text-align: center; margin-top: 32px; line-height: 1.8; }
-
-  /* ===== COUNTDOWN SCREEN ===== */
-  #countdown-screen { background: rgba(10,10,15,0.85); backdrop-filter: blur(4px); z-index: 15; }
-  .countdown-num {
-    font-size: 72px; font-weight: 800; color: var(--green); text-shadow: var(--glow-g);
-    transform: scale(0.5); opacity: 0; transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  .countdown-num.pop { transform: scale(1.2); opacity: 1; }
-  .countdown-num.bang { color: var(--pink); text-shadow: 0 0 24px #ff2d6b88; transform: scale(1.4); }
-
-  /* ===== GAME SCREEN ===== */
-  #screen-game { justify-content: flex-start; padding: 0; }
-  #hud {
-    width: 100%; display: flex; align-items: center; justify-content: space-between;
-    padding: 48px 20px 16px; background: linear-gradient(to bottom, rgba(10,10,15,0.9), transparent);
-    position: relative; z-index: 20;
-  }
-  .hud-score { font-size: 22px; color: var(--green); text-shadow: var(--glow-g); line-height: 1; margin-top: 4px; }
-  .hud-label { font-size: 8px; color: var(--dim); text-transform: uppercase; }
-  .hud-time-wrap { text-align: right; }
-  .hud-time { font-size: 22px; line-height: 1; color: var(--white); transition: color 0.3s; margin-top: 4px; }
-  .hud-time.urgent { color: var(--pink); text-shadow: 0 0 16px #ff2d6b88; }
-  #progress-bar-wrap { position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: rgba(255,255,255,0.08); }
-  #progress-bar { height: 100%; background: linear-gradient(to right, var(--violet), var(--green)); transition: width 0.25s linear; width: 100%; }
-
-  /* ===== TARGET ===== */
-  #game-field { position: absolute; inset: 0; z-index: 15; pointer-events: none; }
-  .target {
-    position: absolute; width: 76px; height: 76px; transform: translate(-50%, -50%);
-    pointer-events: all; -webkit-tap-highlight-color: transparent; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    animation: targetPop 0.2s cubic-bezier(0.34,1.56,0.64,1) forwards;
-  }
-  .target-inner {
-    width: 100%; height: 100%; border-radius: 50%; border: 2.5px solid var(--green);
-    background: rgba(10,10,15,0.85); box-shadow: 0 0 16px #00ff8844, inset 0 0 16px #00ff8818;
-    display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: 12px;
-  }
-  .target-inner img { width: 100%; height: 100%; object-fit: contain; }
-  .target-inner::before {
-    content: ''; position: absolute; inset: -8px; border-radius: 50%;
-    border: 1.5px solid rgba(0,255,136,0.25); animation: ringPulse 1.0s ease-out infinite;
-  }
-  @keyframes targetPop {
-    from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-    to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  }
-  @keyframes ringPulse { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.7); opacity: 0; } }
-  .target.hit-vanish { animation: targetVanish 0.15s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; pointer-events: none; }
-  @keyframes targetVanish { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
-
-  /* ===== OVERLAYS & FEEDBACKS ===== */
-  #combo-overlay {
-    position: fixed; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0);
-    font-size: 20px; color: var(--green); text-shadow: var(--glow-g); z-index: 80; pointer-events: none; opacity: 0;
-  }
-  .combo-animate { animation: comboPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-  @keyframes comboPop { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 30% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -40%) scale(0.9); opacity: 0; } }
-  .feedback-pop { position: fixed; z-index: 100; font-size: 11px; pointer-events: none; animation: feedbackAnim 0.6s ease-out forwards; text-shadow: 0 0 12px currentColor; transform: translate(-50%, -50%); }
-  .feedback-pop.hit { color: var(--green); } .feedback-pop.miss { color: var(--pink); }
-  @keyframes feedbackAnim { 0% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; } 100% { transform: translate(-50%, calc(-50% - 48px)) scale(0.8); opacity: 0; } }
-  .burst { position: fixed; z-index: 99; width: 80px; height: 80px; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%) scale(0); animation: burstAnim 0.4s ease-out forwards; }
-  .burst.hit { background: radial-gradient(circle, rgba(0,255,136,0.45) 0%, transparent 70%); } .burst.miss { background: radial-gradient(circle, rgba(255,45,107,0.35) 0%, transparent 70%); }
-  @keyframes burstAnim { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; } }
-
-  /* ===== RESULT SCREEN ===== */
-  #screen-result { gap: 14px; justify-content: flex-start; padding-top: 36px; overflow-y: auto; }
-  .result-header { text-align: center; width: 100%; }
-  .result-eyebrow { font-size: 9px; color: var(--pink); margin-bottom: 8px; }
-  .result-score-big { font-size: 42px; color: var(--green); text-shadow: var(--glow-g); line-height: 1; }
-  .result-score-label { font-size: 8px; color: var(--dim); margin-top: 8px; }
-  .stats-row { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-  .stat-card {
-    display: flex; justify-content: space-between; align-items: center;
-    background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08);
-    border-radius: var(--r); padding: 12px 16px;
-  }
-  .stat-val { font-size: 11px; } .stat-lbl { font-size: 8px; color: var(--dim); }
-  .percentile-banner {
-    width: 100%; background: linear-gradient(135deg, rgba(123,47,255,0.25), rgba(0,255,136,0.12));
-    border: 1px solid rgba(123,47,255,0.5); border-radius: var(--r); padding: 14px; text-align: center;
-  }
-  .percentile-number { font-size: 14px; color: var(--green); text-shadow: var(--glow-g); }
-  .percentile-text { font-size: 8px; color: var(--dim); margin-top: 6px; }
-
-  /* フォーム入力周り */
-  .email-section {
-    width: 100%; background: var(--glass); backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r); padding: 16px;
-  }
-  .email-title { font-size: 10px; margin-bottom: 8px; color: var(--white); }
-  .email-desc { font-size: 7px; color: var(--dim); margin-bottom: 12px; line-height: 1.6; }
-  .form-input {
-    width: 100%; padding: 12px; background: rgba(255,255,255,0.05);
-    border: 1.5px solid rgba(255,255,255,0.15); border-radius: 8px; color: var(--white); font-size: 9px;
-    font-family: 'Press Start 2P', monospace; outline: none; margin-bottom: 10px;
-  }
-  .form-input:focus { border-color: var(--green); }
-  .btn-submit-flow {
-    width: 100%; font-family: 'Press Start 2P', monospace; font-size: 10px;
-    padding: 14px; border-radius: 8px; border: none; cursor: pointer;
-    background: linear-gradient(135deg, var(--violet), #5a1fd6); color: var(--white);
-    box-shadow: var(--glow-v); -webkit-tap-highlight-color: transparent;
-  }
-  .btn-skip {
-    background: none; border: none; cursor: pointer; color: var(--dim); font-size: 8px;
-    padding: 12px; width: 100%; text-align: center; font-family: 'Press Start 2P', monospace;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* ===== RANKING BOARD SCREEN ===== */
-  #screen-leaderboard { gap: 16px; justify-content: flex-start; padding-top: 36px; overflow-y: auto; }
-  .board-title {
-    font-size: 16px; text-align: center; margin-bottom: 12px;
-    background: linear-gradient(to bottom, #ffea00, #ff9900);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .board-container {
-    width: 100%; background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: var(--r); padding: 14px; max-height: 200px; overflow-y: auto;
-  }
-  .board-container::-webkit-scrollbar { width: 4px; }
-  .board-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
-  .board-row {
-    display: flex; justify-content: space-between; padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 9px;
-  }
-  .board-row.top3 { color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,0.4); }
-  .board-row:last-child { border-bottom: none; }
-  
-  /* ストーリー型紹介カード */
-  .brand-stories-wrap { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px; }
-  .brand-story-card {
-    background: var(--glass); backdrop-filter: blur(12px); border: 1px solid var(--violet); box-shadow: var(--glow-v);
-    border-radius: var(--r); padding: 14px 16px; text-decoration: none; color: var(--white);
-    display: flex; flex-direction: column; gap: 6px; transition: background 0.15s; -webkit-tap-highlight-color: transparent;
-  }
-  .brand-story-card:active { background: rgba(123,47,255,0.2); }
-  .brand-story-header { display: flex; align-items: center; justify-content: space-between; }
-  .brand-story-header img { height: 20px; width: auto; object-fit: contain; }
-  .brand-story-header span { font-size: 8px; color: var(--green); text-shadow: var(--glow-g); }
-  .brand-story-body { font-size: 7.5px; line-height: 1.6; color: var(--dim); text-align: justify; font-family: sans-serif; letter-spacing: 0.3px; }
-
-  .btn-retry {
-    background: none; border: 1.5px solid rgba(255,255,255,0.15);
-    color: var(--dim); font-size: 9px; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%;
-    font-family: 'Press Start 2P', monospace; -webkit-tap-highlight-color: transparent; margin-top: 16px;
-  }
-  .btn-retry:active { border-color: var(--green); color: var(--green); }
-
-  /* ===== TRANSMISSION OVERLAY ===== */
-  #sending-overlay {
-    position: fixed; inset: 0; z-index: 200; background: rgba(10,10,15,0.94); backdrop-filter: blur(12px);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-    opacity: 0; pointer-events: none; transition: opacity 0.2s;
-  }
-  #sending-overlay.show { opacity: 1; pointer-events: all; }
-  .spinner { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(0,255,136,0.1); border-top-color: var(--green); animation: spin 0.6s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  
-  .debug-log-console {
-    width: 85%; background: #000; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
-    padding: 12px; font-family: monospace; font-size: 9px; color: #00ff00; text-align: left;
-    max-height: 140px; overflow-y: auto; line-height: 1.4; box-shadow: inset 0 0 10px #000;
-  }
-  .log-line { margin-bottom: 4px; border-left: 2px solid var(--violet); padding-left: 6px; }
-  .log-line.err { color: var(--pink); border-left-color: var(--pink); }
-
-  .loading-pct-text { font-family: 'Press Start 2P', monospace; font-size: 24px; color: var(--green); text-shadow: var(--glow-g); }
-  #cam-denied { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 50; font-size: 8px; color: var(--dim); background: var(--glass); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); border-radius: 8px; padding: 8px 14px; white-space: nowrap; display: none; }
-</style>
-</head>
-<body>
-
-<div id="camera-bg">
-  <video id="camera-video" autoplay muted playsinline></video>
-</div>
-
-<div class="screen" id="screen-start">
-  <div class="logo-badge">
-    <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
-    <span class="badge-x">×</span>
-    <img src="白透過.png" class="badge-wacca" id="main-wacca-logo" alt="wacca" onerror="handleWaccaLogoError(this)">
-  </div>
-
-  <div class="edition-tag">POP UP EDITION</div>
-  <h1 class="start-headline">Shoot & Bang</h1>
-  <p class="start-sub">LIMIT: 10 SECONDS</p>
-
-  <button class="btn-primary" id="btn-start">PLAY</button>
-
-  <p class="cam-notice">CAMERA ACCESS REQUIRED<br>FOR THE GAMEPLAY</p>
-</div>
-
-<div class="screen hidden" id="countdown-screen">
-  <div class="countdown-num" id="countdown-text">3</div>
-</div>
-
-<div class="screen hidden" id="screen-game">
-  <div id="hud">
-    <div>
-      <div class="hud-label">SCORE</div>
-      <div class="hud-score" id="hud-score">0</div>
-    </div>
-    <div class="hud-time-wrap">
-      <div class="hud-label">TIME</div>
-      <div class="hud-time" id="hud-time">10</div>
-    </div>
-    <div id="progress-bar-wrap">
-      <div id="progress-bar"></div>
-    </div>
-  </div>
-  <div id="game-field"></div>
-</div>
-
-<div id="combo-overlay"></div>
-
-<div class="screen hidden" id="screen-result">
-  <div class="result-header">
-    <div class="result-eyebrow">GAME OVER</div>
-    <div class="result-score-big" id="res-score">0</div>
-    <div class="result-score-label">TOTAL SCORE</div>
-  </div>
-
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-lbl" style="color:var(--green)">HIT</div>
-      <div class="stat-val" id="res-hits">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-lbl" style="color:var(--pink)">MISS</div>
-      <div class="stat-val" id="res-miss">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-lbl">ACCURACY</div>
-      <div class="stat-val" id="res-acc">0%</div>
-    </div>
-  </div>
-
-  <div class="percentile-banner">
-    <div class="percentile-number" id="res-percentile">—</div>
-    <div class="percentile-text" id="res-percentile-text">ANALYZING RECORD...</div>
-  </div>
-
-  <div class="email-section">
-    <div class="email-title">ENTER YOUR PROFILE</div>
-    
-    <input type="text" class="form-input" id="nickname-input" placeholder="YOUR NAME (MAX 8)" maxlength="8">
-    <input type="email" class="form-input" id="email-input" placeholder="your@email.com (OPTIONAL)" inputmode="email">
-    
-    <button class="btn-submit-flow" id="btn-submit-flow">SUBMIT & VIEW RANKING</button>
-    <button class="btn-skip" id="btn-skip-flow">SKIP & VIEW RANKING →</button>
-  </div>
-</div>
-
-<div class="screen hidden" id="screen-leaderboard">
-  <h2 class="board-title">🏆 TOP 15 RECORDS</h2>
-  
-  <div class="board-container" id="leaderboard-list">
-    <div style="text-align:center; padding:20px; font-size:8px; color:var(--dim);">LOADING...</div>
-  </div>
-
-  <div class="brand-stories-wrap">
-    <a class="brand-story-card" id="link-snafu" href="#" target="_blank" rel="noopener">
-      <div class="brand-story-header">
-        <img src="snafu_logo.png" alt="SNAFU">
-        <span>INSTAGRAM ➔</span>
-      </div>
-      <p class="brand-story-body">
-        SNAFU VINTAGE selects premium archive items, subculture garments, and rare collectible pieces. We bridge timeless identity with modern street expressions.
-      </p>
-    </a>
-    
-    <a class="brand-story-card" id="link-wacca" href="#" target="_blank" rel="noopener">
-      <div class="brand-story-header">
-        <img src="白透過.png" style="height:20px; filter: brightness(2.5) contrast(1.2) !important;" id="story-wacca-logo" alt="wacca" onerror="handleWaccaLogoError(this)">
-        <span>INSTAGRAM ➔</span>
-      </div>
-      <p class="brand-story-body">
-        wacca redefines the cycle of creativity and craft. We deliver minimalist digital product identities, striking brand aesthetics, and borderless design logic for early visionaries.
-      </p>
-    </a>
-  </div>
-
-  <button class="btn-retry" id="btn-retry">RETRY</button>
-</div>
-
-<div id="sending-overlay">
-  <div class="spinner"></div>
-  <div id="loading-pct" class="loading-pct-text">0%</div>
-  <div class="debug-log-console" id="debug-console">
-    <div class="log-line">Console Initialized. Waiting payload...</div>
-  </div>
-</div>
-
-<div id="cam-denied">📵 NO CAMERA MODE</div>
-
-<script>
-function handleWaccaLogoError(imgElement) {
-  const fallbacks = ["白透過.png", "白透過.jpg", "黒白.png", "黒白.PNG", "白透過.PNG", "wacca_logo.png"];
-  if (!imgElement.dataset.attempt) imgElement.dataset.attempt = "0";
-  let attempt = parseInt(imgElement.dataset.attempt);
-  if (attempt < fallbacks.length) {
-    const nextSrc = fallbacks[attempt];
-    imgElement.dataset.attempt = String(attempt + 1);
-    imgElement.src = nextSrc;
-  } else {
-    imgElement.style.display = "none";
-    const txtNode = document.createElement("span");
-    txtNode.textContent = "WACCA"; txtNode.style.fontSize = "20px"; txtNode.style.fontWeight = "bold";
-    imgElement.parentNode.appendChild(txtNode);
-  }
-}
-
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzGKQuK1k6cdDtbFn9kxGaGeRE-DGY3Ow4dxDqWXoT2z7Z2izB7dti4RWHrwoG7Xq6k/exec";
-const SNAFU_IG = "https://www.instagram.com/snafuvintage?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
-const WACCA_IG  = "https://www.instagram.com/wacca__jp?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
-
-const GAME_DURATION = 10; 
-const TARGET_INTERVAL_MIN = 250;   
-const TARGET_INTERVAL_MAX = 500;  
-const TARGET_LIFETIME     = 1200; 
-
-const state = {
-  sessionId: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
-  eventType: new URLSearchParams(location.search).get("env") || "popup",
-  playCount: 0,
-  loadTimeMs: 0,
-  cameraPermission: "unknown",
-  score: 0,
-  hits: 0,
-  misses: 0,
-  combo: 0,
-  playDuration: 0,
-  snsClickWacca: false,
-  snsClickSnafu: false,
-  submitted: false,
-  timeLeft: GAME_DURATION,
-  gameActive: false,
-  timerInterval: null,
-  spawnTimeout: null,
-  startTs: 0,
-  pageLoadTs: performance.now(),
-};
-
-const playCount = parseInt(localStorage.getItem("snafu_play_count") || "0");
-state.playCount = playCount + 1;
-localStorage.setItem("snafu_play_count", String(state.playCount));
-
-document.getElementById("link-snafu").href = SNAFU_IG;
-document.getElementById("link-wacca").href = WACCA_IG;
-
-function addConsoleLog(text, isError = false) {
-  const consoleEl = document.getElementById("debug-console");
-  const line = document.createElement("div");
-  line.className = `log-line ${isError ? 'err' : ''}`;
-  line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
-  consoleEl.appendChild(line);
-  consoleEl.scrollTop = consoleEl.scrollHeight;
-}
-
-async function startCamera() {
-  const video = document.getElementById("camera-video");
+function doPost(e) {
+  // どんな想定外のエラーが起きてもCORSを維持し、確実にJSONオブジェクトをフロントに返す
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment", width: { ideal: 720 } },
-      audio: false,
-    });
-    video.srcObject = stream;
-    video.style.display = "block";
-    state.cameraPermission = "granted";
-  } catch {
-    state.cameraPermission = "denied";
-    document.getElementById("cam-denied").style.display = "block";
-    setTimeout(() => { document.getElementById("cam-denied").style.display = "none"; }, 3000);
-  }
-}
+    const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME)
+                  || SpreadsheetApp.getActiveSpreadsheet().insertSheet(SHEET_NAME);
 
-function show(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-}
-
-document.getElementById("btn-start").addEventListener("click", async () => {
-  state.loadTimeMs = Math.round(performance.now() - state.pageLoadTs);
-  await startCamera();
-  resetGame();
-  show("countdown-screen");
-  runStartCountdown();
-});
-
-function runStartCountdown() {
-  const cdEl = document.getElementById("countdown-text");
-  const counts = ["3", "2", "1", "BANG!"];
-  let step = 0;
-
-  const triggerNextStep = () => {
-    if (step < counts.length) {
-      cdEl.textContent = counts[step];
-      cdEl.className = "countdown-num"; 
-      if (counts[step] === "BANG!") cdEl.classList.add("bang");
-      void cdEl.offsetWidth;
-      cdEl.classList.add("pop");
-      if (navigator.vibrate) navigator.vibrate(counts[step] === "BANG!" ? [40, 30, 40] : 20);
-      step++;
-      setTimeout(triggerNextStep, 800); 
-    } else {
-      show("screen-game");
-      startGame();
+    // ヘッダー行の自動生成
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        "timestamp", "session_id", "event_type", "play_count",
+        "load_time_ms", "camera_permission", "play_duration_sec",
+        "total_score", "hit_taps", "miss_taps", "tap_accuracy",
+        "email", "sns_click_wacca", "sns_click_snafu", "nickname"
+      ]);
     }
-  };
-  triggerNextStep();
-}
 
-function resetGame() {
-  state.score = 0; state.hits = 0; state.misses = 0; state.combo = 0;
-  state.timeLeft = GAME_DURATION; state.gameActive = false;
-  state.snsClickWacca = false; state.snsClickSnafu = false;
-  state.submitted = false;
-  document.getElementById("hud-score").textContent = "0";
-  document.getElementById("hud-time").textContent  = String(GAME_DURATION);
-  document.getElementById("hud-time").classList.remove("urgent");
-  document.getElementById("progress-bar").style.width = "100%";
-  document.getElementById("game-field").innerHTML = "";
-  document.getElementById("nickname-input").value = "";
-  document.getElementById("email-input").value = "";
-  document.getElementById("res-percentile").textContent = "—";
-  document.getElementById("res-percentile-text").textContent = "ANALYZING RECORD...";
-  
-  const comboEl = document.getElementById("combo-overlay");
-  comboEl.textContent = ""; comboEl.classList.remove("combo-animate");
-}
+    // 1. スプレッドシートへのデータ追加（H列=スコア, O列=名前）
+    const now = new Date();
+    sheet.appendRow([
+      now.toISOString(),
+      String(data.session_id || ""),
+      String(data.event_type || "popup"),
+      Number(data.play_count) || 1,
+      Number(data.load_time_ms) || 0,
+      String(data.camera_permission || "granted"),
+      Number(data.play_duration_sec) || 10,
+      Number(data.total_score) || 0, // H列(8列目)
+      Number(data.hit_taps) || 0,
+      Number(data.miss_taps) || 0,
+      Number(data.tap_accuracy) || 0,
+      String(data.email || ""),
+      data.sns_click_wacca || false,
+      data.sns_click_snafu || false,
+      String(data.nickname || "ANON").trim().toUpperCase() // O列(15列目)
+    ]);
 
-function startGame() {
-  state.gameActive = true;
-  state.startTs = Date.now();
-  state.timerInterval = setInterval(() => {
-    state.timeLeft--;
-    const el = document.getElementById("hud-time");
-    el.textContent = String(state.timeLeft);
-    document.getElementById("progress-bar").style.width = ((state.timeLeft / GAME_DURATION) * 100) + "%";
-    if (state.timeLeft <= 3) el.classList.add("urgent"); 
-    if (state.timeLeft <= 0) endGame();
-  }, 1000);
-  spawnNext();
-}
+    // セルのデータ追加を強制確定
+    SpreadsheetApp.flush();
 
-function spawnNext() {
-  if (!state.gameActive) return;
-  const delay = TARGET_INTERVAL_MIN + Math.random() * (TARGET_INTERVAL_MAX - TARGET_INTERVAL_MIN);
-  state.spawnTimeout = setTimeout(() => {
-    spawnTarget();
-    if (Math.random() < 0.35) {
-      setTimeout(() => { if (state.gameActive) spawnTarget(); }, 80);
-    }
-    spawnNext();
-  }, delay);
-}
+    const lastRow = sheet.getLastRow();
+    const allPlayers = [];
 
-function spawnTarget() {
-  const field  = document.getElementById("game-field");
-  const margin = 56;
-  const x = margin + Math.random() * (window.innerWidth  - margin * 2);
-  const y = 140   + Math.random() * (window.innerHeight  - 240);
-  
-  const randomImg = Math.random() < 0.5 ? "snafu_logo.png" : "白透過.png";
-  const t = document.createElement("div");
-  t.className = "target"; t.style.left = x + "px"; t.style.top = y + "px";
-  
-  // 的の中のwaccaロゴアセット対応
-  const finalSrc = randomImg === 'wacca_logo.png' ? '白透過.png' : randomImg;
-  t.innerHTML = `<div class="target-inner"><img src="${finalSrc}" alt="target" onerror="handleWaccaLogoError(this)"></div>`;
-
-  let hit = false;
-  t.addEventListener("click", (e) => {
-    if (!state.gameActive) return;
-    e.stopPropagation(); hit = true;
-    if (navigator.vibrate) navigator.vibrate(15);
-    
-    state.combo++;
-    state.score += 10 + Math.floor(state.combo / 5) * 5;
-    state.hits++;
-    
-    document.getElementById("hud-score").textContent = state.score;
-    showFeedback(x, y, `+10`, "hit");
-    
-    if (state.combo >= 3) {
-      const comboEl = document.getElementById("combo-overlay");
-      comboEl.textContent = `${state.combo} COMBO!`;
-      comboEl.classList.remove("combo-animate");
-      void comboEl.offsetWidth; 
-      comboEl.classList.add("combo-animate");
-      comboEl.style.color = state.combo % 10 === 0 ? "var(--pink)" : "var(--green)";
-    }
-    t.classList.add("hit-vanish");
-    setTimeout(() => { if(t.parentNode) t.remove(); }, 150);
-  });
-
-  field.appendChild(t);
-  setTimeout(() => { if (!hit && t.parentNode) { t.remove(); } }, TARGET_LIFETIME);
-}
-
-document.getElementById("screen-game").addEventListener("click", (e) => {
-  if (!state.gameActive) return;
-  if (e.target.closest(".target") || e.target.closest("#hud")) return;
-  if (navigator.vibrate) navigator.vibrate(60);
-  state.combo = 0; state.misses++;
-  showFeedback(e.clientX, e.clientY, "MISS", "miss");
-});
-
-function showFeedback(x, y, text, type) {
-  const fb = document.createElement("div");
-  fb.className = `feedback-pop ${type}`; fb.textContent = text;
-  fb.style.left = x + "px"; fb.style.top = y + "px";
-  document.body.appendChild(fb); setTimeout(() => fb.remove(), 650);
-
-  const burst = document.createElement("div");
-  burst.className = `burst ${type}`; burst.style.left = x + "px"; burst.style.top = y + "px";
-  document.body.appendChild(burst); setTimeout(() => burst.remove(), 420);
-}
-
-function endGame() {
-  state.gameActive = false;
-  clearInterval(state.timerInterval); clearTimeout(state.spawnTimeout);
-  document.getElementById("game-field").innerHTML = "";
-  state.playDuration = Math.round((Date.now() - state.startTs) / 1000);
-  const accuracy = state.hits + state.misses > 0 ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
-  document.getElementById("res-score").textContent = state.score;
-  document.getElementById("res-hits").textContent  = state.hits;
-  document.getElementById("res-miss").textContent  = state.misses;
-  document.getElementById("res-acc").textContent   = accuracy + "%";
-  show("screen-result");
-}
-
-document.getElementById("link-snafu").addEventListener("click", () => { state.snsClickSnafu = true; });
-document.getElementById("link-wacca").addEventListener("click", () => { state.snsClickWacca = true; });
-
-/* ===== ☠️ CORS予期通信完全スルー・100%リアルタイム同期コア ☠️ ===== */
-async function sendDataWithCors(email, name) {
-  if (state.submitted) return;
-  state.submitted = true;
-
-  const accuracy = state.hits + state.misses > 0 ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
-
-  const payload = {
-    session_id:        String(state.sessionId),
-    event_type:        String(state.eventType),
-    play_count:        Number(state.playCount),
-    load_time_ms:      Number(state.loadTimeMs),
-    camera_permission: String(state.cameraPermission),
-    play_duration_sec: Number(state.playDuration),
-    total_score:       Number(state.score),
-    hit_taps:          Number(state.hits),
-    miss_taps:         Number(state.misses),
-    tap_accuracy:      Number(accuracy),
-    email:             String(email || ""),
-    nickname:          String(name || "ANON"),
-    sns_click_wacca:   Boolean(state.snsClickWacca),
-    sns_click_snafu:   Boolean(state.snsClickSnafu)
-  };
-
-  document.getElementById("debug-console").innerHTML = "";
-  addConsoleLog("🚀 パイプライン接続開始...");
-
-  const pctEl = document.getElementById("loading-pct");
-  pctEl.textContent = "0%";
-  document.getElementById("sending-overlay").classList.add("show");
-
-  let currentPct = 0;
-  const pctInterval = setInterval(() => {
-    if (currentPct < 85) {
-      currentPct += Math.floor(Math.random() * 6) + 3;
-      if (currentPct > 85) currentPct = 85;
-      pctEl.textContent = `${currentPct}%`;
-    }
-  }, 40);
-
-  try {
-    addConsoleLog("GASサーバーへデータを同期中...");
-    
-    // 🔥【CORS絶対開通ハック】予期通信(OPTIONS)の発生をブラウザに完全に阻止させ、
-    // 直線でGASのdoPostにデータを叩き込むため Content-Type を text/plain に強制固定
-    const res = await fetch(GAS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(payload)
-    });
-
-    addConsoleLog(`HTTPレスポンスコード: ${res.status}`);
-    if (!res.ok) throw new Error(`HTTP_ERROR: ${res.status}`);
-
-    addConsoleLog("ランキング配列をパース中...");
-    const json = await res.json();
-
-    clearInterval(pctInterval);
-    pctEl.textContent = "100%";
-    addConsoleLog("➔ 【成功】すべてのデータの転記とランキング同期が完了しました！");
-
-    setTimeout(() => {
-      show("screen-leaderboard"); 
-
-      if (json && json.success) {
-        const pct = 100 - (json.percentile || 0);
-        document.getElementById("res-percentile").textContent = `TOP ${pct}%`;
-        document.getElementById("res-percentile-text").textContent = `FROM ${json.total_players || 1} PLAYERS`;
+    // 2. スプレッドシートのH列とO列からデータを一括スキャン
+    if (lastRow > 1) {
+      const rawValues = sheet.getRange(2, 1, lastRow - 1, 15).getValues();
+      
+      for (let i = 0; i < rawValues.length; i++) {
+        const row = rawValues[i];
+        const scoreVal = Number(row[7]);  // H列 (total_score)
+        let nameVal    = String(row[14]).trim(); // O列 (nickname)
         
-        const listEl = document.getElementById("leaderboard-list");
-        listEl.innerHTML = ""; 
-        
-        const boardData = json.leaderboard || [];
-        
-        if (boardData.length === 0) {
-          listEl.innerHTML = `<div style="text-align:center; padding:20px; font-size:8px; color:var(--dim);">NO RECORDS</div>`;
-        } else {
-          boardData.forEach((player, index) => {
-            const rank = index + 1;
-            const isTop3 = rank <= 3 ? "top3" : "";
-            const crown = rank === 1 ? "👑 " : rank === 2 ? "🥈 " : rank === 3 ? "🥉 " : `${rank}. `;
-            listEl.innerHTML += `
-              <div class="board-row ${isTop3}">
-                <span>${crown}${player.nickname || "ANON"}</span>
-                <span>${player.score !== undefined ? player.score : 0}P</span>
-              </div>
-            `;
+        if (!nameVal || nameVal === "undefined" || nameVal === "") {
+          nameVal = "ANON";
+        }
+
+        if (!isNaN(scoreVal)) {
+          allPlayers.push({
+            nickname: nameVal.toUpperCase(),
+            score: scoreVal
           });
         }
-      } else {
-        addConsoleLog("GAS内部でデータ成形が弾かれました。スプシの行数等を確認してください。", true);
       }
-    }, 600);
+    }
+
+    // 3. スコア降順（高い順）にソートして上位15名を厳密に抽出
+    allPlayers.sort(function(a, b) { return b.score - a.score; });
+    const top15 = allPlayers.slice(0, 15);
+
+    // 相対順位（パーセンタイル）計算
+    const myScore = Number(data.total_score) || 0;
+    const betterCount = allPlayers.filter(function(p) { return p.score > myScore; }).length;
+    const totalCount = allPlayers.length || 1;
+    const percentile = Math.min(100, Math.max(0, Math.round((betterCount / totalCount) * 100)));
+
+    // 4. フロントへ返すJSONレスポンスのビルド
+    const resPayload = {
+      success: true,
+      percentile: percentile,
+      total_players: totalCount,
+      leaderboard: top15
+    };
+
+    // 💡 Googleの内部セキュリティを貫通させる完全なTextOutputオブジェクトへの格納
+    return ContentService.createTextOutput(JSON.stringify(resPayload))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*")
+      .setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+      .setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   } catch (err) {
-    clearInterval(pctInterval);
-    pctEl.textContent = "ERR";
-    addConsoleLog(`❌ クラッシュ検出: ${err.message}`, true);
-    addConsoleLog(`【対策】GAS側のコードとデプロイの確認が必要です。`, true);
-  } finally {
-    setTimeout(() => {
-      document.getElementById("sending-overlay").classList.remove("show");
-    }, 1800);
+    // 例外エラー時もCORSを維持して、フロント側のコンソールにエラー原因を直接返す
+    const errPayload = {
+      success: false,
+      error: err.toString(),
+      leaderboard: []
+    };
+    return ContentService.createTextOutput(JSON.stringify(errPayload))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
   }
 }
 
-/* ---- BUTTONS EVENTS ---- */
-document.getElementById("btn-submit-flow").addEventListener("click", async () => {
-  let name = document.getElementById("nickname-input").value.trim().toUpperCase();
-  if(!name) name = "ANON";
-  const email = document.getElementById("email-input").value.trim();
-  await sendDataWithCors(email, name);
-});
-
-document.getElementById("btn-skip-flow").addEventListener("click", async () => {
-  await sendDataWithCors("", "ANON");
-});
-
-document.getElementById("btn-retry").addEventListener("click", () => {
-  resetGame(); show("screen-game"); startGame();
-});
-</script>
-</body>
-</html>
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({ status: "ok" }))
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader("Access-Control-Allow-Origin", "*");
+}
