@@ -61,7 +61,7 @@
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ：画像の暗い背景色を貫通し、パキッと鮮明なピュアホワイトに発光させて直置きするスタイル指定 */
+  /* 🔥開始時のwaccaロゴ：パキッと白く直置き発光させて視認性を最大化 */
   .badge-wacca { 
     height: 165px; width: auto; object-fit: contain; 
     filter: brightness(0) invert(1) drop-shadow(var(--glow-g)) !important;
@@ -365,7 +365,7 @@
     
     <a class="brand-story-card" id="link-wacca" href="#" target="_blank" rel="noopener">
       <div class="brand-story-header">
-        <img src="白透過.png" style="height:20px; filter: brightness(0) invert(1) !important;" id="story-wacca-logo" alt="wacca" onerror="handleWaccaLogoError(this)">
+        <img src="白透過.png" style="height:20px; filter: brightness(0) invert(1);" id="story-wacca-logo" alt="wacca" onerror="handleWaccaLogoError(this)">
         <span>INSTAGRAM ➔</span>
       </div>
       <p class="brand-story-body">
@@ -389,7 +389,7 @@
 
 <script>
 function handleWaccaLogoError(imgElement) {
-  const fallbacks = ["白透過.png", "白透過.jpg", "黒白.png", "黒白.PNG", "白透過.PNG", "wacca_logo.png"];
+  const fallbacks = ["白透過.png", "黒白.png", "黒白.PNG", "白透過.PNG", "wacca_logo.png"];
   if (!imgElement.dataset.attempt) imgElement.dataset.attempt = "0";
   let attempt = parseInt(imgElement.dataset.attempt);
   if (attempt < fallbacks.length) {
@@ -628,7 +628,7 @@ function endGame() {
 document.getElementById("link-snafu").addEventListener("click", () => { state.snsClickSnafu = true; });
 document.getElementById("link-wacca").addEventListener("click", () => { state.snsClickWacca = true; });
 
-/* ---- リアルタイム同期・双方向通信大開通コア ---- */
+/* ---- リアルタイムデータベース双方向同期コア ---- */
 async function sendDataWithCors(email, name) {
   if (state.submitted) return;
   state.submitted = true;
@@ -671,8 +671,7 @@ async function sendDataWithCors(email, name) {
   try {
     addConsoleLog("GASサーバーへデータを同期中...");
     
-    // 💡 Content-Type を text/plain に完全固定してブラウザの予備通信(OPTIONS)を物理遮断
-    const res = await fetch(GAS_URL, {
+    const res  = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload)
@@ -681,7 +680,7 @@ async function sendDataWithCors(email, name) {
     addConsoleLog(`HTTPレスポンスコード: ${res.status}`);
     if (!res.ok) throw new Error(`HTTP_ERROR: ${res.status}`);
 
-    addConsoleLog("ランキング配列を解析中...");
+    addConsoleLog("ランキング配列をパース中...");
     const json = await res.json();
 
     clearInterval(pctInterval);
@@ -717,7 +716,7 @@ async function sendDataWithCors(email, name) {
           });
         }
       } else {
-        addConsoleLog("GAS内部エラーを検知しました。コードのデプロイを確認してください。", true);
+        addConsoleLog("GAS内部でデータ成形が弾かれました。スプシの行数等を確認してください。", true);
       }
     }, 600);
 
