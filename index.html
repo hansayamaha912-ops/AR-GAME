@@ -61,8 +61,8 @@
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ表示領域：絶対に見えるように設定 */
-  .badge-wacca { height: 165px; width: auto; object-fit: contain; min-width: 100px; min-height: 50px; background: rgba(255,255,255,0.02); }
+  /* waccaロゴ表示領域：白透過画像が完璧に見えるよう、干渉フィルターをすべて全消去 */
+  .badge-wacca { height: 165px; width: auto; object-fit: contain; }
 
   .edition-tag {
     font-size: 8px; color: var(--pink); letter-spacing: 2px;
@@ -385,9 +385,8 @@
 <div id="cam-denied">📵 NO CAMERA MODE</div>
 
 <script>
-// 画像読み込みエラー時の救済ロジック(サーバー上にどの名前で存在しても自動探索)
 function handleWaccaLogoError(imgElement) {
-  const fallbacks = ["黒白.png", "黒白.PNG", "白透過.png", "白透過.PNG", "wacca_logo.png", "wacca_logo.PNG"];
+  const fallbacks = ["白透過.png", "黒白.png", "黒白.PNG", "白透過.PNG", "wacca_logo.png"];
   if (!imgElement.dataset.attempt) imgElement.dataset.attempt = "0";
   let attempt = parseInt(imgElement.dataset.attempt);
   if (attempt < fallbacks.length) {
@@ -395,13 +394,9 @@ function handleWaccaLogoError(imgElement) {
     imgElement.dataset.attempt = String(attempt + 1);
     imgElement.src = nextSrc;
   } else {
-    // すべてダメならテキスト代替
     imgElement.style.display = "none";
     const txtNode = document.createElement("span");
-    txtNode.textContent = "WACCA";
-    txtNode.style.fontSize = "20px";
-    txtNode.style.fontWeight = "bold";
-    txtNode.style.letterSpacing = "2px";
+    txtNode.textContent = "WACCA"; txtNode.style.fontSize = "20px"; txtNode.style.fontWeight = "bold";
     imgElement.parentNode.appendChild(txtNode);
   }
 }
@@ -559,9 +554,7 @@ function spawnTarget() {
   
   const randomImg = Math.random() < 0.5 ? "snafu_logo.png" : "白透過.png";
   const t = document.createElement("div");
-  t.className = "target";
-  t.style.left = x + "px"; t.style.top = y + "px";
-  
+  t.className = "target"; t.style.left = x + "px"; t.style.top = y + "px";
   t.innerHTML = `<div class="target-inner"><img src="${randomImg}" alt="target" onerror="handleWaccaLogoError(this)"></div>`;
 
   let hit = false;
@@ -628,14 +621,13 @@ function endGame() {
 document.getElementById("link-snafu").addEventListener("click", () => { state.snsClickSnafu = true; });
 document.getElementById("link-wacca").addEventListener("click", () => { state.snsClickWacca = true; });
 
-/* ===== ☠️ 順番不問・完全汎用オブジェクト型データ送信エンジン ☠️ ===== */
+/* ===== ☠️ 構造完全同期・強靭データ展開エンジン ☠️ ===== */
 async function sendDataWithCors(email, name) {
   if (state.submitted) return;
   state.submitted = true;
 
   const accuracy = state.hits + state.misses > 0 ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
 
-  // 配列の順番ズレによるGASクラッシュを防ぐため、完全なオブジェクトとして送信
   const payload = {
     session_id:        String(state.sessionId),
     event_type:        String(state.eventType),
@@ -679,47 +671,49 @@ async function sendDataWithCors(email, name) {
     });
 
     addConsoleLog(`HTTPレスポンスコード: ${res.status}`);
-    
-    if (!res.ok) {
-      throw new Error(`HTTP_ERROR: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`HTTP_ERROR: ${res.status}`);
 
-    addConsoleLog("リターンランキングデータを解析中...");
-    const rawText = await res.text();
-    
-    let json;
-    try {
-      json = JSON.parse(rawText);
-    } catch(e) {
-      throw new Error("GAS側コードのエラー画面が返却されました。GASの修正が必要です。");
-    }
+    addConsoleLog("ランキング配列を解析中...");
+    const json = await res.json();
 
     clearInterval(pctInterval);
     pctEl.textContent = "100%";
-    addConsoleLog("➔ 【成功】すべてのデータの転記と取得が完了しました！");
+    addConsoleLog("➔ 【成功】すべてのデータの転記とランキング同期が完了しました！");
 
     setTimeout(() => {
       show("screen-leaderboard"); 
 
       if (json && json.success) {
-        const pct = 100 - json.percentile;
+        const pct = 100 - (json.percentile || 0);
         document.getElementById("res-percentile").textContent = `TOP ${pct}%`;
-        document.getElementById("res-percentile-text").textContent = `FROM ${json.total_players} PLAYERS`;
+        document.getElementById("res-percentile-text").textContent = `FROM ${json.total_players || 1} PLAYERS`;
         
         const listEl = document.getElementById("leaderboard-list");
         listEl.innerHTML = ""; 
         
-        json.leaderboard.forEach((player, index) => {
-          const rank = index + 1;
-          const isTop3 = rank <= 3 ? "top3" : "";
-          const crown = rank === 1 ? "👑 " : rank === 2 ? "🥈 " : rank === 3 ? "🥉 " : `${rank}. `;
-          listEl.innerHTML += `
-            <div class="board-row ${isTop3}">
-              <span>${crown}${player.nickname}</span>
-              <span>${player.score}P</span>
-            </div>
-          `;
-        });
+        // GAS側のオブジェクトプロパティと厳密に結合
+        const boardData = json.leaderboard || [];
+        
+        if (boardData.length === 0) {
+          listEl.innerHTML = `<div style="text-align:center; padding:20px; font-size:8px; color:var(--dim);">NO RECORDS</div>`;
+        } else {
+          boardData.forEach((player, index) => {
+            const rank = index + 1;
+            const isTop3 = rank <= 3 ? "top3" : "";
+            const crown = rank === 1 ? "👑 " : rank === 2 ? "🥈 " : rank === 3 ? "🥉 " : `${rank}. `;
+            
+            // プロパティ名の不一致フォールバック
+            const pName = player.nickname || "ANON";
+            const pScore = player.score !== undefined ? player.score : 0;
+            
+            listEl.innerHTML += `
+              <div class="board-row ${isTop3}">
+                <span>${crown}${pName}</span>
+                <span>${pScore}P</span>
+              </div>
+            `;
+          });
+        }
       } else {
         showLeaderboardFallback(name);
       }
@@ -729,16 +723,15 @@ async function sendDataWithCors(email, name) {
     clearInterval(pctInterval);
     pctEl.textContent = "ERR";
     addConsoleLog(`❌ クラッシュ検出: ${err.message}`, true);
-    addConsoleLog(`【対策】GAS側のコードとデプロイの確認が必要です。`, true);
     
     setTimeout(() => {
       show("screen-leaderboard");
       showLeaderboardFallback(name);
-    }, 4000); 
+    }, 1500); 
   } finally {
     setTimeout(() => {
       document.getElementById("sending-overlay").classList.remove("show");
-    }, 4200);
+    }, 1800);
   }
 }
 
