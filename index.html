@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Shoot & Bang</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<!-- 8bitデジタルフォント(Press Start 2P)を読み込み -->
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   /* ===== TOKENS ===== */
@@ -56,7 +55,7 @@
   /* ===== START SCREEN ===== */
   #screen-start { gap: 0; }
 
-  /* ロゴ配置：横並び並行ライン */
+  /* ロゴ配置：横一列で完全に並行（中央揃え） */
   .logo-badge {
     display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 24px;
     margin-bottom: 40px; width: 100%; height: 30vh; 
@@ -64,7 +63,7 @@
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ：不具合の原因となるフィルター（filter）記述を完全排除。ネイティブ白文字透過Ver素材のポテンシャルを100%発揮 */
+  /* waccaロゴ：新素材「黒白.png」に完全差し替え。見やすさを阻害していたフィルターを全削除 */
   .badge-wacca { 
     height: 165px; width: auto; object-fit: contain; 
   }
@@ -219,7 +218,7 @@
   }
   .board-container {
     width: 100%; background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: var(--r); padding: 14px; max-height: 220px; overflow-y: auto;
+    border-radius: var(--r); padding: 14px; max-height: 200px; overflow-y: auto;
   }
   .board-container::-webkit-scrollbar { width: 4px; }
   .board-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
@@ -230,7 +229,7 @@
   .board-row.top3 { color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,0.4); }
   .board-row:last-child { border-bottom: none; }
   
-  /* ストーリー型没入紹介カードブロック */
+  /* ストーリー型紹介カードブロック */
   .brand-stories-wrap {
     display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px;
   }
@@ -255,7 +254,7 @@
   .btn-retry {
     background: none; border: 1.5px solid rgba(255,255,255,0.15);
     color: var(--dim); font-size: 9px; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%;
-    font-family: 'Press Start 2P', monospace; -webkit-tap-highlight-color: transparent; margin-top: 8px;
+    font-family: 'Press Start 2P', monospace; -webkit-tap-highlight-color: transparent; margin-top: 16px;
   }
   .btn-retry:active { border-color: var(--green); color: var(--green); }
 
@@ -278,12 +277,11 @@
   <video id="camera-video" autoplay muted playsinline></video>
 </div>
 
-<!-- START SCREEN -->
 <div class="screen" id="screen-start">
   <div class="logo-badge">
     <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
     <span class="badge-x">×</span>
-    <img src="wacca_logo.png" class="badge-wacca" alt="wacca">
+    <img src="黒白.png" class="badge-wacca" alt="wacca">
   </div>
 
   <div class="edition-tag">POP UP EDITION</div>
@@ -295,12 +293,10 @@
   <p class="cam-notice">CAMERA ACCESS REQUIRED<br>FOR THE GAMEPLAY</p>
 </div>
 
-<!-- COUNTDOWN SCREEN -->
 <div class="screen hidden" id="countdown-screen">
   <div class="countdown-num" id="countdown-text">3</div>
 </div>
 
-<!-- GAME SCREEN -->
 <div class="screen hidden" id="screen-game">
   <div id="hud">
     <div>
@@ -320,7 +316,6 @@
 
 <div id="combo-overlay"></div>
 
-<!-- RESULT SCREEN -->
 <div class="screen hidden" id="screen-result">
   <div class="result-header">
     <div class="result-eyebrow">GAME OVER</div>
@@ -359,7 +354,6 @@
   </div>
 </div>
 
-<!-- RANKING BOARD SCREEN -->
 <div class="screen hidden" id="screen-leaderboard">
   <h2 class="board-title">🏆 TOP 15 RECORDS</h2>
   
@@ -367,7 +361,6 @@
     <div style="text-align:center; padding:20px; font-size:8px; color:var(--dim);">LOADING...</div>
   </div>
 
-  <!-- ストーリー紹介プレミアム導入カード -->
   <div class="brand-stories-wrap">
     <a class="brand-story-card" id="link-snafu" href="#" target="_blank" rel="noopener">
       <div class="brand-story-header">
@@ -381,7 +374,7 @@
     
     <a class="brand-story-card" id="link-wacca" href="#" target="_blank" rel="noopener">
       <div class="brand-story-header">
-        <img src="wacca_logo.png" style="height:14px;" alt="wacca">
+        <img src="黒白.png" style="height:20px;" alt="wacca">
         <span>INSTAGRAM ➔</span>
       </div>
       <p class="brand-story-body">
@@ -393,7 +386,6 @@
   <button class="btn-retry" id="btn-retry">RETRY</button>
 </div>
 
-<!-- SENDING OVERLAY -->
 <div id="sending-overlay">
   <div class="spinner"></div>
   <div class="sending-text">TRACKING DATA…</div>
@@ -564,7 +556,8 @@ function spawnTarget() {
   t.className = "target";
   t.style.left = x + "px"; t.style.top = y + "px";
   
-  t.innerHTML = `<div class="target-inner"><img src="${randomImg}" alt="target"></div>`;
+  // 的の中の画像指定。waccaのロゴ画像が「黒白.png」に変更された場合でもそのままプレーンに表示される構造を担保
+  t.innerHTML = `<div class="target-inner"><img src="${randomImg === 'wacca_logo.png' ? '黒白.png' : randomImg}" alt="target"></div>`;
 
   let hit = false;
   t.addEventListener("click", (e) => {
@@ -681,12 +674,12 @@ async function sendDataWithCors(email, name) {
 
   let currentPct = 0;
   const pctInterval = setInterval(() => {
-    if (currentPct < 95) {
-      currentPct += Math.floor(Math.random() * 5) + 3;
-      if (currentPct > 95) currentPct = 95;
+    if (currentPct < 90) {
+      currentPct += Math.floor(Math.random() * 7) + 4;
+      if (currentPct > 90) currentPct = 90;
       pctEl.textContent = `${currentPct}%`;
     }
-  }, 40);
+  }, 30);
 
   try {
     const res  = await fetch(GAS_URL, {
@@ -707,7 +700,7 @@ async function sendDataWithCors(email, name) {
     setTimeout(() => {
       show("screen-leaderboard"); 
 
-      if (json.success) {
+      if (json && json.success) {
         const pct = 100 - json.percentile;
         document.getElementById("res-percentile").textContent = `TOP ${pct}%`;
         document.getElementById("res-percentile-text").textContent = `FROM ${json.total_players} PLAYERS`;
@@ -730,7 +723,7 @@ async function sendDataWithCors(email, name) {
       } else {
         showLeaderboardFallback(name);
       }
-    }, 150);
+    }, 200);
 
   } catch (err) {
     console.error("送信エラー:", err);
@@ -739,11 +732,11 @@ async function sendDataWithCors(email, name) {
     setTimeout(() => {
       show("screen-leaderboard");
       showLeaderboardFallback(name);
-    }, 150);
+    }, 200);
   } finally {
     setTimeout(() => {
       document.getElementById("sending-overlay").classList.remove("show");
-    }, 200);
+    }, 300);
   }
 }
 
