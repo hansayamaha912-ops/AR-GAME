@@ -559,6 +559,7 @@ function spawnTarget() {
   const t = document.createElement("div");
   t.className = "target"; t.style.left = x + "px"; t.style.top = y + "px";
   
+  // 的の中のwaccaロゴを純白化処理
   const isWacca = randomImg === "白透過.png";
   const inlineStyle = isWacca ? "filter: brightness(0) invert(1) !important;" : "";
   t.innerHTML = `<div class="target-inner"><img src="${randomImg}" style="${inlineStyle}" alt="target" onerror="handleWaccaLogoError(this)"></div>`;
@@ -730,6 +731,22 @@ async function sendDataWithCors(email, name) {
     }, 1800);
   }
 }
+
+/* ---- BUTTONS EVENTS ---- */
+document.getElementById("btn-submit-flow").addEventListener("click", async () => {
+  let name = document.getElementById("nickname-input").value.trim().toUpperCase();
+  if(!name) name = "ANON";
+  const email = document.getElementById("email-input").value.trim();
+  await sendDataWithCors(email, name);
+});
+
+document.getElementById("btn-skip-flow").addEventListener("click", async () => {
+  await sendDataWithCors("", "ANON");
+});
+
+document.getElementById("btn-retry").addEventListener("click", () => {
+  resetGame(); show("screen-game"); startGame();
+});
 </script>
 </body>
 </html>
