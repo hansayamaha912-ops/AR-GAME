@@ -61,7 +61,7 @@
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* 🔥開始時のwaccaロゴ：パキッと白く直置き発光させて視認性を最大化 */
+  /* waccaロゴ：黒背景でもスナフと同等にクッキリ完全な白文字で直置き表示されるように純白化を完全保証 */
   .badge-wacca { 
     height: 165px; width: auto; object-fit: contain; 
     filter: brightness(0) invert(1) drop-shadow(var(--glow-g)) !important;
@@ -365,7 +365,7 @@
     
     <a class="brand-story-card" id="link-wacca" href="#" target="_blank" rel="noopener">
       <div class="brand-story-header">
-        <img src="白透過.png" style="height:20px; filter: brightness(0) invert(1);" id="story-wacca-logo" alt="wacca" onerror="handleWaccaLogoError(this)">
+        <img src="白透過.png" style="height:20px; filter: brightness(0) invert(1) !important;" id="story-wacca-logo" alt="wacca" onerror="handleWaccaLogoError(this)">
         <span>INSTAGRAM ➔</span>
       </div>
       <p class="brand-story-body">
@@ -389,7 +389,7 @@
 
 <script>
 function handleWaccaLogoError(imgElement) {
-  const fallbacks = ["白透過.png", "黒白.png", "黒白.PNG", "白透過.PNG", "wacca_logo.png"];
+  const fallbacks = ["白透過.png", "白透過.jpg", "黒白.png", "黒白.PNG", "白透過.PNG", "wacca_logo.png"];
   if (!imgElement.dataset.attempt) imgElement.dataset.attempt = "0";
   let attempt = parseInt(imgElement.dataset.attempt);
   if (attempt < fallbacks.length) {
@@ -671,7 +671,7 @@ async function sendDataWithCors(email, name) {
   try {
     addConsoleLog("GASサーバーへデータを同期中...");
     
-    const res  = await fetch(GAS_URL, {
+    const res = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload)
@@ -680,7 +680,7 @@ async function sendDataWithCors(email, name) {
     addConsoleLog(`HTTPレスポンスコード: ${res.status}`);
     if (!res.ok) throw new Error(`HTTP_ERROR: ${res.status}`);
 
-    addConsoleLog("ランキング配列をパース中...");
+    addConsoleLog("ランキング配列を解析中...");
     const json = await res.json();
 
     clearInterval(pctInterval);
@@ -716,7 +716,7 @@ async function sendDataWithCors(email, name) {
           });
         }
       } else {
-        addConsoleLog("GAS内部でデータ成形が弾かれました。スプシの行数等を確認してください。", true);
+        addConsoleLog("GAS内部エラーを検知しました。コードのデプロイを確認してください。", true);
       }
     }, 600);
 
