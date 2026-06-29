@@ -61,8 +61,11 @@
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ：白透過アセットがダイレクトに綺麗に見えるよう、CSSフィルターを完全消去してプレーン化 */
-  .badge-wacca { height: 165px; width: auto; object-fit: contain; }
+  /* waccaロゴ：黒背景でもスナフと同等にパキッと白く直置き発光させるスタイル調整 */
+  .badge-wacca { 
+    height: 165px; width: auto; object-fit: contain;
+    filter: brightness(2.5) contrast(1.2) drop-shadow(var(--glow-g)) !important;
+  }
 
   .edition-tag {
     font-size: 8px; color: var(--pink); letter-spacing: 2px;
@@ -362,7 +365,7 @@
     
     <a class="brand-story-card" id="link-wacca" href="#" target="_blank" rel="noopener">
       <div class="brand-story-header">
-        <img src="白透過.png" style="height:20px;" id="story-wacca-logo" alt="wacca" onerror="handleWaccaLogoError(this)">
+        <img src="白透過.png" style="height:20px; filter: brightness(2.5) contrast(1.2) !important;" id="story-wacca-logo" alt="wacca" onerror="handleWaccaLogoError(this)">
         <span>INSTAGRAM ➔</span>
       </div>
       <p class="brand-story-body">
@@ -386,7 +389,7 @@
 
 <script>
 function handleWaccaLogoError(imgElement) {
-  const fallbacks = ["白透過.png", "黒白.png", "黒白.PNG", "白透過.PNG", "wacca_logo.png"];
+  const fallbacks = ["白透過.png", "白透過.jpg", "黒白.png", "黒白.PNG", "白透過.PNG", "wacca_logo.png"];
   if (!imgElement.dataset.attempt) imgElement.dataset.attempt = "0";
   let attempt = parseInt(imgElement.dataset.attempt);
   if (attempt < fallbacks.length) {
@@ -555,7 +558,10 @@ function spawnTarget() {
   const randomImg = Math.random() < 0.5 ? "snafu_logo.png" : "白透過.png";
   const t = document.createElement("div");
   t.className = "target"; t.style.left = x + "px"; t.style.top = y + "px";
-  t.innerHTML = `<div class="target-inner"><img src="${randomImg}" alt="target" onerror="handleWaccaLogoError(this)"></div>`;
+  
+  // 的の中のwaccaロゴアセット対応
+  const finalSrc = randomImg === 'wacca_logo.png' ? '白透過.png' : randomImg;
+  t.innerHTML = `<div class="target-inner"><img src="${finalSrc}" alt="target" onerror="handleWaccaLogoError(this)"></div>`;
 
   let hit = false;
   t.addEventListener("click", (e) => {
@@ -621,7 +627,7 @@ function endGame() {
 document.getElementById("link-snafu").addEventListener("click", () => { state.snsClickSnafu = true; });
 document.getElementById("link-wacca").addEventListener("click", () => { state.snsClickWacca = true; });
 
-/* ---- リアルタイムデータベース双方向同期コア ---- */
+/* ===== ☠️ CORS予期通信完全スルー・100%リアルタイム同期コア ☠️ ===== */
 async function sendDataWithCors(email, name) {
   if (state.submitted) return;
   state.submitted = true;
@@ -664,7 +670,9 @@ async function sendDataWithCors(email, name) {
   try {
     addConsoleLog("GASサーバーへデータを同期中...");
     
-    const res  = await fetch(GAS_URL, {
+    // 🔥【CORS絶対開通ハック】予期通信(OPTIONS)の発生をブラウザに完全に阻止させ、
+    // 直線でGASのdoPostにデータを叩き込むため Content-Type を text/plain に強制固定
+    const res = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload)
@@ -673,7 +681,7 @@ async function sendDataWithCors(email, name) {
     addConsoleLog(`HTTPレスポンスコード: ${res.status}`);
     if (!res.ok) throw new Error(`HTTP_ERROR: ${res.status}`);
 
-    addConsoleLog("ランキング配列を解析中...");
+    addConsoleLog("ランキング配列をパース中...");
     const json = await res.json();
 
     clearInterval(pctInterval);
@@ -709,7 +717,7 @@ async function sendDataWithCors(email, name) {
           });
         }
       } else {
-        showLocalMirrorFallback(name);
+        addConsoleLog("GAS内部でデータ成形が弾かれました。スプシの行数等を確認してください。", true);
       }
     }, 600);
 
@@ -717,30 +725,12 @@ async function sendDataWithCors(email, name) {
     clearInterval(pctInterval);
     pctEl.textContent = "ERR";
     addConsoleLog(`❌ クラッシュ検出: ${err.message}`, true);
-    
-    setTimeout(() => {
-      show("screen-leaderboard");
-      showLocalMirrorFallback(name);
-    }, 1500); 
+    addConsoleLog(`【対策】GAS側のコードとデプロイの確認が必要です。`, true);
   } finally {
     setTimeout(() => {
       document.getElementById("sending-overlay").classList.remove("show");
     }, 1800);
   }
-}
-
-// データベースが復帰するまでの間、スプシから弾かれた際のみローカルで最低限の描画処理を走らせるバックアップトリガー
-function showLocalMirrorFallback(currentName) {
-  const listEl = document.getElementById("leaderboard-list");
-  listEl.innerHTML = `
-    <div class="board-row top3">
-      <span>👑 1. ${currentName} (YOU)</span>
-      <span>${state.score}P</span>
-    </div>
-    <div style="text-align:center; padding:16px 0 6px; font-size:7px; color:var(--pink); letter-spacing:-0.5px;">
-      *DATABASE DESYNC. RETRY SUBMIT.
-    </div>
-  `;
 }
 
 /* ---- BUTTONS EVENTS ---- */
