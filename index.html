@@ -54,8 +54,6 @@
 
   /* ===== START SCREEN ===== */
   #screen-start { gap: 0; }
-
-  /* ロゴ配置：横一列で完全に並行（中央揃え） */
   .logo-badge {
     display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 24px;
     margin-bottom: 40px; width: 100%; height: 30vh; 
@@ -63,10 +61,8 @@
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ：新素材「黒白.png」に完全差し替え。見やすさを阻害していたフィルターを全削除 */
-  .badge-wacca { 
-    height: 165px; width: auto; object-fit: contain; 
-  }
+  /* waccaロゴ：白透過.pngへ完全統一・プレーン表示 */
+  .badge-wacca { height: 165px; width: auto; object-fit: contain; }
 
   .edition-tag {
     font-size: 8px; color: var(--pink); letter-spacing: 2px;
@@ -76,26 +72,18 @@
 
   .start-headline {
     font-size: clamp(18px, 5.5vw, 26px);
-    white-space: nowrap;
-    text-align: center; 
-    margin-bottom: 40px;
+    white-space: nowrap; text-align: center; margin-bottom: 40px;
     background: linear-gradient(to bottom, #ffffff 0%, #00d2ff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     text-shadow: 0 0 20px rgba(0,210,255,0.3);
   }
 
   .btn-primary {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 18px;
-    padding: 24px 64px; border-radius: var(--r);
-    border: none; cursor: pointer;
-    background: linear-gradient(135deg, var(--green), #00cc6a);
-    color: #0a0a0f;
+    font-family: 'Press Start 2P', monospace; font-size: 18px;
+    padding: 24px 64px; border-radius: var(--r); border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--green), #00cc6a); color: #0a0a0f;
     box-shadow: var(--glow-g), 0 0 30px rgba(0,255,136,0.4);
-    transition: transform 0.12s;
-    -webkit-tap-highlight-color: transparent;
-    letter-spacing: 1px;
+    transition: transform 0.12s; -webkit-tap-highlight-color: transparent; letter-spacing: 1px;
   }
   .btn-primary:active { transform: scale(0.95); }
   .cam-notice { font-size: 7px; color: var(--dim); text-align: center; margin-top: 32px; line-height: 1.8; }
@@ -229,27 +217,18 @@
   .board-row.top3 { color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,0.4); }
   .board-row:last-child { border-bottom: none; }
   
-  /* ストーリー型紹介カードブロック */
-  .brand-stories-wrap {
-    display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px;
-  }
+  /* ストーリー型紹介カード */
+  .brand-stories-wrap { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px; }
   .brand-story-card {
-    background: var(--glass); backdrop-filter: blur(12px);
-    border: 1px solid var(--violet); box-shadow: var(--glow-v);
-    border-radius: var(--r); padding: 14px 16px; text-decoration: none;
-    color: var(--white); display: flex; flex-direction: column; gap: 6px;
-    transition: background 0.15s; -webkit-tap-highlight-color: transparent;
+    background: var(--glass); backdrop-filter: blur(12px); border: 1px solid var(--violet); box-shadow: var(--glow-v);
+    border-radius: var(--r); padding: 14px 16px; text-decoration: none; color: var(--white);
+    display: flex; flex-direction: column; gap: 6px; transition: background 0.15s; -webkit-tap-highlight-color: transparent;
   }
   .brand-story-card:active { background: rgba(123,47,255,0.2); }
-  .brand-story-header {
-    display: flex; align-items: center; justify-content: space-between;
-  }
+  .brand-story-header { display: flex; align-items: center; justify-content: space-between; }
   .brand-story-header img { height: 20px; width: auto; object-fit: contain; }
   .brand-story-header span { font-size: 8px; color: var(--green); text-shadow: var(--glow-g); }
-  .brand-story-body {
-    font-size: 7.5px; line-height: 1.6; color: var(--dim); text-align: justify;
-    font-family: sans-serif; letter-spacing: 0.3px;
-  }
+  .brand-story-body { font-size: 7.5px; line-height: 1.6; color: var(--dim); text-align: justify; font-family: sans-serif; letter-spacing: 0.3px; }
 
   .btn-retry {
     background: none; border: 1.5px solid rgba(255,255,255,0.15);
@@ -258,16 +237,26 @@
   }
   .btn-retry:active { border-color: var(--green); color: var(--green); }
 
+  /* ===== TRANSMISSION OVERLAY (WITH TRACKING LOGS) ===== */
   #sending-overlay {
-    position: fixed; inset: 0; z-index: 200; background: rgba(10,10,15,0.85); backdrop-filter: blur(8px);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    position: fixed; inset: 0; z-index: 200; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
     opacity: 0; pointer-events: none; transition: opacity 0.2s;
   }
   #sending-overlay.show { opacity: 1; pointer-events: all; }
-  .spinner { width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(0,255,136,0.15); border-top-color: var(--green); animation: spin 0.7s linear infinite; }
+  .spinner { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(0,255,136,0.1); border-top-color: var(--green); animation: spin 0.6s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .sending-text { font-size: 9px; color: var(--dim); }
-  .loading-pct-text { font-family: 'Press Start 2P', monospace; font-size: 20px; color: var(--green); text-shadow: var(--glow-g); margin-top: 8px; }
+  
+  /* デバッグ・通信パイプライン可視化ログ表示領域 */
+  .debug-log-console {
+    width: 85%; background: #000; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
+    padding: 12px; font-family: monospace; font-size: 9px; color: #00ff00; text-align: left;
+    max-height: 110px; overflow-y: auto; line-height: 1.4; box-shadow: inset 0 0 10px #000;
+  }
+  .log-line { margin-bottom: 4px; border-left: 2px solid var(--violet); padding-left: 6px; }
+  .log-line.err { color: var(--pink); border-left-color: var(--pink); }
+
+  .loading-pct-text { font-family: 'Press Start 2P', monospace; font-size: 24px; color: var(--green); text-shadow: var(--glow-g); }
   #cam-denied { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 50; font-size: 8px; color: var(--dim); background: var(--glass); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); border-radius: 8px; padding: 8px 14px; white-space: nowrap; display: none; }
 </style>
 </head>
@@ -281,7 +270,7 @@
   <div class="logo-badge">
     <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
     <span class="badge-x">×</span>
-    <img src="黒白.png" class="badge-wacca" alt="wacca">
+    <img src="白透過.png" class="badge-wacca" alt="wacca">
   </div>
 
   <div class="edition-tag">POP UP EDITION</div>
@@ -374,7 +363,7 @@
     
     <a class="brand-story-card" id="link-wacca" href="#" target="_blank" rel="noopener">
       <div class="brand-story-header">
-        <img src="黒白.png" style="height:20px;" alt="wacca">
+        <img src="白透過.png" style="height:20px;" alt="wacca">
         <span>INSTAGRAM ➔</span>
       </div>
       <p class="brand-story-body">
@@ -388,8 +377,10 @@
 
 <div id="sending-overlay">
   <div class="spinner"></div>
-  <div class="sending-text">TRACKING DATA…</div>
   <div id="loading-pct" class="loading-pct-text">0%</div>
+  <div class="debug-log-console" id="debug-console">
+    <div class="log-line">Console Initialized. Waiting payload...</div>
+  </div>
 </div>
 
 <div id="cam-denied">📵 NO CAMERA MODE</div>
@@ -405,7 +396,6 @@ const TARGET_INTERVAL_MIN = 250;
 const TARGET_INTERVAL_MAX = 500;  
 const TARGET_LIFETIME     = 1200; 
 
-/* ---- STATE ---- */
 const state = {
   sessionId: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
   eventType: new URLSearchParams(location.search).get("env") || "popup",
@@ -428,7 +418,6 @@ const state = {
   pageLoadTs: performance.now(),
 };
 
-/* ---- INIT ---- */
 const playCount = parseInt(localStorage.getItem("snafu_play_count") || "0");
 state.playCount = playCount + 1;
 localStorage.setItem("snafu_play_count", String(state.playCount));
@@ -436,7 +425,15 @@ localStorage.setItem("snafu_play_count", String(state.playCount));
 document.getElementById("link-snafu").href = SNAFU_IG;
 document.getElementById("link-wacca").href = WACCA_IG;
 
-/* ---- CAMERA ---- */
+function addConsoleLog(text, isError = false) {
+  const consoleEl = document.getElementById("debug-console");
+  const line = document.createElement("div");
+  line.className = `log-line ${isError ? 'err' : ''}`;
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+  consoleEl.appendChild(line);
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
 async function startCamera() {
   const video = document.getElementById("camera-video");
   try {
@@ -459,7 +456,6 @@ function show(id) {
   document.getElementById(id).classList.remove("hidden");
 }
 
-/* ---- START (3,2,1,BANGカウントダウン) ---- */
 document.getElementById("btn-start").addEventListener("click", async () => {
   state.loadTimeMs = Math.round(performance.now() - state.pageLoadTs);
   await startCamera();
@@ -480,11 +476,7 @@ function runStartCountdown() {
       if (counts[step] === "BANG!") cdEl.classList.add("bang");
       void cdEl.offsetWidth;
       cdEl.classList.add("pop");
-
-      if (navigator.vibrate) {
-        navigator.vibrate(counts[step] === "BANG!" ? [40, 30, 40] : 20);
-      }
-
+      if (navigator.vibrate) navigator.vibrate(counts[step] === "BANG!" ? [40, 30, 40] : 20);
       step++;
       setTimeout(triggerNextStep, 800); 
     } else {
@@ -495,7 +487,6 @@ function runStartCountdown() {
   triggerNextStep();
 }
 
-/* ---- GAME ---- */
 function resetGame() {
   state.score = 0; state.hits = 0; state.misses = 0; state.combo = 0;
   state.timeLeft = GAME_DURATION; state.gameActive = false;
@@ -512,24 +503,20 @@ function resetGame() {
   document.getElementById("res-percentile-text").textContent = "ANALYZING RECORD...";
   
   const comboEl = document.getElementById("combo-overlay");
-  comboEl.textContent = "";
-  comboEl.classList.remove("combo-animate");
+  comboEl.textContent = ""; comboEl.classList.remove("combo-animate");
 }
 
 function startGame() {
   state.gameActive = true;
   state.startTs = Date.now();
-
   state.timerInterval = setInterval(() => {
     state.timeLeft--;
     const el = document.getElementById("hud-time");
     el.textContent = String(state.timeLeft);
-    document.getElementById("progress-bar").style.width =
-      ((state.timeLeft / GAME_DURATION) * 100) + "%";
+    document.getElementById("progress-bar").style.width = ((state.timeLeft / GAME_DURATION) * 100) + "%";
     if (state.timeLeft <= 3) el.classList.add("urgent"); 
     if (state.timeLeft <= 0) endGame();
   }, 1000);
-
   spawnNext();
 }
 
@@ -556,15 +543,14 @@ function spawnTarget() {
   t.className = "target";
   t.style.left = x + "px"; t.style.top = y + "px";
   
-  // 的の中の画像指定。waccaのロゴ画像が「黒白.png」に変更された場合でもそのままプレーンに表示される構造を担保
-  t.innerHTML = `<div class="target-inner"><img src="${randomImg === 'wacca_logo.png' ? '黒白.png' : randomImg}" alt="target"></div>`;
+  // 的の中の画像パスも「白透過.png」を完全指定
+  const finalSrc = randomImg === 'wacca_logo.png' ? '白透過.png' : randomImg;
+  t.innerHTML = `<div class="target-inner"><img src="${finalSrc}" alt="target"></div>`;
 
   let hit = false;
   t.addEventListener("click", (e) => {
     if (!state.gameActive) return;
-    e.stopPropagation();
-    hit = true;
-    
+    e.stopPropagation(); hit = true;
     if (navigator.vibrate) navigator.vibrate(15);
     
     state.combo++;
@@ -580,16 +566,8 @@ function spawnTarget() {
       comboEl.classList.remove("combo-animate");
       void comboEl.offsetWidth; 
       comboEl.classList.add("combo-animate");
-      
-      if (state.combo % 10 === 0) {
-        comboEl.style.color = "var(--pink)";
-        comboEl.style.textShadow = "0 0 18px #ff2d6b88";
-      } else {
-        comboEl.style.color = "var(--green)";
-        comboEl.style.textShadow = "var(--glow-g)";
-      }
+      comboEl.style.color = state.combo % 10 === 0 ? "var(--pink)" : "var(--green)";
     }
-
     t.classList.add("hit-vanish");
     setTimeout(() => { if(t.parentNode) t.remove(); }, 150);
   });
@@ -601,11 +579,8 @@ function spawnTarget() {
 document.getElementById("screen-game").addEventListener("click", (e) => {
   if (!state.gameActive) return;
   if (e.target.closest(".target") || e.target.closest("#hud")) return;
-  
   if (navigator.vibrate) navigator.vibrate(60);
-  
-  state.combo = 0;
-  state.misses++;
+  state.combo = 0; state.misses++;
   showFeedback(e.clientX, e.clientY, "MISS", "miss");
 });
 
@@ -613,60 +588,58 @@ function showFeedback(x, y, text, type) {
   const fb = document.createElement("div");
   fb.className = `feedback-pop ${type}`; fb.textContent = text;
   fb.style.left = x + "px"; fb.style.top = y + "px";
-  document.body.appendChild(fb);
-  setTimeout(() => fb.remove(), 650);
+  document.body.appendChild(fb); setTimeout(() => fb.remove(), 650);
 
   const burst = document.createElement("div");
-  burst.className = `burst ${type}`;
-  burst.style.left = x + "px"; burst.style.top = y + "px";
-  document.body.appendChild(burst);
-  setTimeout(() => burst.remove(), 420);
+  burst.className = `burst ${type}`; burst.style.left = x + "px"; burst.style.top = y + "px";
+  document.body.appendChild(burst); setTimeout(() => burst.remove(), 420);
 }
 
 function endGame() {
   state.gameActive = false;
-  clearInterval(state.timerInterval);
-  clearTimeout(state.spawnTimeout);
+  clearInterval(state.timerInterval); clearTimeout(state.spawnTimeout);
   document.getElementById("game-field").innerHTML = "";
-
   state.playDuration = Math.round((Date.now() - state.startTs) / 1000);
   const accuracy = state.hits + state.misses > 0 ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
-
   document.getElementById("res-score").textContent = state.score;
   document.getElementById("res-hits").textContent  = state.hits;
   document.getElementById("res-miss").textContent  = state.misses;
   document.getElementById("res-acc").textContent   = accuracy + "%";
-
   show("screen-result");
 }
 
 document.getElementById("link-snafu").addEventListener("click", () => { state.snsClickSnafu = true; });
 document.getElementById("link-wacca").addEventListener("click", () => { state.snsClickWacca = true; });
 
-/* ---- データベース双方向連携・インジケータ同期送信 ---- */
+/* ===== ☠️ 超硬化リターン強制・追跡型通信コアエンジン ☠️ ===== */
 async function sendDataWithCors(email, name) {
   if (state.submitted) return;
   state.submitted = true;
 
-  const accuracy = state.hits + state.misses > 0
-    ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
+  const accuracy = state.hits + state.misses > 0 ? Math.round((state.hits / (state.hits + state.misses)) * 100) : 0;
 
+  // ペイロード（JSON）ビルド
   const payload = {
-    session_id:       state.sessionId,
-    event_type:       state.eventType,
-    play_count:       state.playCount,
-    load_time_ms:     state.loadTimeMs,
-    camera_permission: state.cameraPermission,
-    play_duration_sec: state.playDuration,
-    total_score:      state.score,
-    hit_taps:         state.hits,
-    miss_taps:        state.misses,
-    tap_accuracy:     accuracy,
-    email:            email || "",
-    nickname:         name || "ANON",
-    sns_click_wacca:  state.snsClickWacca,
-    sns_click_snafu:  state.snsClickSnafu,
+    session_id:        String(state.sessionId),
+    event_type:        String(state.eventType),
+    play_count:        Number(state.playCount),
+    load_time_ms:      Number(state.loadTimeMs),
+    camera_permission: String(state.cameraPermission),
+    play_duration_sec: Number(state.playDuration),
+    total_score:       Number(state.score),
+    hit_taps:          Number(state.hits),
+    miss_taps:         Number(state.misses),
+    tap_accuracy:      Number(accuracy),
+    email:             String(email || ""),
+    nickname:          String(name || "ANON"),
+    sns_click_wacca:   Boolean(state.snsClickWacca),
+    sns_click_snafu:   Boolean(state.snsClickSnafu)
   };
+
+  // 初期化ログ
+  document.getElementById("debug-console").innerHTML = "";
+  addConsoleLog("🔥 パイプライン接続開始...");
+  addConsoleLog(`データ検証: Score=${payload.total_score}, Name=${payload.nickname}`);
 
   const pctEl = document.getElementById("loading-pct");
   pctEl.textContent = "0%";
@@ -674,28 +647,42 @@ async function sendDataWithCors(email, name) {
 
   let currentPct = 0;
   const pctInterval = setInterval(() => {
-    if (currentPct < 90) {
-      currentPct += Math.floor(Math.random() * 7) + 4;
-      if (currentPct > 90) currentPct = 90;
+    if (currentPct < 85) {
+      currentPct += Math.floor(Math.random() * 6) + 3;
+      if (currentPct > 85) currentPct = 85;
       pctEl.textContent = `${currentPct}%`;
     }
-  }, 30);
+  }, 40);
 
   try {
-    const res  = await fetch(GAS_URL, {
+    addConsoleLog(`GASへPOST送信中... URL: ${GAS_URL.substring(0, 45)}...`);
+    
+    // GASのセキュリティ制限を破壊するため text/plain で文字列化して完全透過送信
+    const res = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
+
+    addConsoleLog(`HTTPレスポンス受信: Status=${res.status} (${res.statusText})`);
     
     if (!res.ok) {
-      throw new Error("GAS_CRASH");
+      throw new Error(`HTTP_BAD_STATUS: ${res.status}`);
     }
+
+    addConsoleLog("JSON文字列の抽出・リターン解析中...");
+    const rawText = await res.text();
     
-    const json = await res.json();
+    let json;
+    try {
+      json = JSON.parse(rawText);
+    } catch(e) {
+      throw new Error("GAS側が有効なJSONを返していません(CORSまたは構文エラー)。戻り値: " + rawText.substring(0, 40));
+    }
 
     clearInterval(pctInterval);
     pctEl.textContent = "100%";
+    addConsoleLog("➔ 【成功】転記完了・データベース同期成功！");
 
     setTimeout(() => {
       show("screen-leaderboard"); 
@@ -712,7 +699,6 @@ async function sendDataWithCors(email, name) {
           const rank = index + 1;
           const isTop3 = rank <= 3 ? "top3" : "";
           const crown = rank === 1 ? "👑 " : rank === 2 ? "🥈 " : rank === 3 ? "🥉 " : `${rank}. `;
-          
           listEl.innerHTML += `
             <div class="board-row ${isTop3}">
               <span>${crown}${player.nickname}</span>
@@ -721,22 +707,25 @@ async function sendDataWithCors(email, name) {
           `;
         });
       } else {
+        addConsoleLog("GAS実行は成功しましたがsuccessフラグがfalseです", true);
         showLeaderboardFallback(name);
       }
-    }, 200);
+    }, 600);
 
   } catch (err) {
-    console.error("送信エラー:", err);
     clearInterval(pctInterval);
-    pctEl.textContent = "100%";
+    pctEl.textContent = "ERR";
+    addConsoleLog(`❌ クラッシュ発生: ${err.message}`, true);
+    console.error("送信エラー詳細:", err);
+    
     setTimeout(() => {
       show("screen-leaderboard");
       showLeaderboardFallback(name);
-    }, 200);
+    }, 2500); // エラーメッセージをユーザーが視認できるようにディレイを設定
   } finally {
     setTimeout(() => {
       document.getElementById("sending-overlay").classList.remove("show");
-    }, 300);
+    }, 2800);
   }
 }
 
@@ -748,7 +737,7 @@ function showLeaderboardFallback(currentName) {
       <span>${state.score}P</span>
     </div>
     <div style="text-align:center; padding:16px 0 6px; font-size:7px; color:var(--pink); letter-spacing:-0.5px;">
-      *DATABASE IS TEMPORARILY OFFLINE
+      *DATABASE LINK TIME OUT. OFFLINE ACTIVE.
     </div>
   `;
 }
@@ -758,7 +747,6 @@ document.getElementById("btn-submit-flow").addEventListener("click", async () =>
   let name = document.getElementById("nickname-input").value.trim().toUpperCase();
   if(!name) name = "ANON";
   const email = document.getElementById("email-input").value.trim();
-  
   await sendDataWithCors(email, name);
 });
 
@@ -767,9 +755,7 @@ document.getElementById("btn-skip-flow").addEventListener("click", async () => {
 });
 
 document.getElementById("btn-retry").addEventListener("click", () => {
-  resetGame();
-  show("screen-game");
-  startGame();
+  resetGame(); show("screen-game"); startGame();
 });
 </script>
 </body>
