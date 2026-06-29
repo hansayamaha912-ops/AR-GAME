@@ -61,7 +61,7 @@
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ：黒背景でもスナフと同等にクッキリ完全な白文字で直置き表示されるように純白化を完全保証 */
+  /* waccaロゴ：開始画面でもスナフと同等の純白でパキッと直置き表示されるスタイル調整 */
   .badge-wacca { 
     height: 165px; width: auto; object-fit: contain; 
     filter: brightness(0) invert(1) drop-shadow(var(--glow-g)) !important;
@@ -559,7 +559,6 @@ function spawnTarget() {
   const t = document.createElement("div");
   t.className = "target"; t.style.left = x + "px"; t.style.top = y + "px";
   
-  // 的の中のwaccaロゴを純白化処理
   const isWacca = randomImg === "白透過.png";
   const inlineStyle = isWacca ? "filter: brightness(0) invert(1) !important;" : "";
   t.innerHTML = `<div class="target-inner"><img src="${randomImg}" style="${inlineStyle}" alt="target" onerror="handleWaccaLogoError(this)"></div>`;
@@ -671,7 +670,7 @@ async function sendDataWithCors(email, name) {
   try {
     addConsoleLog("GASサーバーへデータを同期中...");
     
-    const res = await fetch(GAS_URL, {
+    const res  = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload)
@@ -680,7 +679,7 @@ async function sendDataWithCors(email, name) {
     addConsoleLog(`HTTPレスポンスコード: ${res.status}`);
     if (!res.ok) throw new Error(`HTTP_ERROR: ${res.status}`);
 
-    addConsoleLog("ランキング配列を解析中...");
+    addConsoleLog("ランキング配列をパース中...");
     const json = await res.json();
 
     clearInterval(pctInterval);
@@ -716,7 +715,7 @@ async function sendDataWithCors(email, name) {
           });
         }
       } else {
-        addConsoleLog("GAS内部エラーを検知しました。コードのデプロイを確認してください。", true);
+        addConsoleLog("GAS内部でデータ成形が弾かれました。コードのデプロイを確認してください。", true);
       }
     }, 600);
 
