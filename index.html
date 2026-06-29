@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Shoot & Bang</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- 8bitデジタルフォント(Press Start 2P)を読み込み -->
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   /* ===== TOKENS ===== */
@@ -55,18 +56,17 @@
   /* ===== START SCREEN ===== */
   #screen-start { gap: 0; }
 
-  /* ロゴ配置：縦並びを廃止し、横一列で完全に並行（中央揃え）にリビルド */
+  /* ロゴ配置：横並び並行ライン */
   .logo-badge {
     display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 24px;
-    margin-bottom: 40px; width: 100%; height: 30vh; /* 画面縦幅の30%を確保 */
+    margin-bottom: 40px; width: 100%; height: 30vh; 
   }
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ：サイズを3倍に大型化。白文字透過Ver素材への完全ネイティブ対応 */
+  /* waccaロゴ：不具合の原因となるフィルター（filter）記述を完全排除。ネイティブ白文字透過Ver素材のポテンシャルを100%発揮 */
   .badge-wacca { 
     height: 165px; width: auto; object-fit: contain; 
-    filter: drop-shadow(var(--glow-g)); 
   }
 
   .edition-tag {
@@ -101,10 +101,8 @@
   .btn-primary:active { transform: scale(0.95); }
   .cam-notice { font-size: 7px; color: var(--dim); text-align: center; margin-top: 32px; line-height: 1.8; }
 
-  /* ===== COUNTDOWN OVERLAY ===== */
-  #countdown-screen {
-    background: rgba(10,10,15,0.85); backdrop-filter: blur(4px); z-index: 15;
-  }
+  /* ===== COUNTDOWN SCREEN ===== */
+  #countdown-screen { background: rgba(10,10,15,0.85); backdrop-filter: blur(4px); z-index: 15; }
   .countdown-num {
     font-size: 72px; font-weight: 800; color: var(--green); text-shadow: var(--glow-g);
     transform: scale(0.5); opacity: 0; transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -153,7 +151,7 @@
   .target.hit-vanish { animation: targetVanish 0.15s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; pointer-events: none; }
   @keyframes targetVanish { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
 
-  /* ===== OVERLAYS & FEEDBACK ===== */
+  /* ===== FEEDBACKS ===== */
   #combo-overlay {
     position: fixed; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0);
     font-size: 20px; color: var(--green); text-shadow: var(--glow-g); z-index: 80; pointer-events: none; opacity: 0;
@@ -187,21 +185,19 @@
   .percentile-number { font-size: 14px; color: var(--green); text-shadow: var(--glow-g); }
   .percentile-text { font-size: 8px; color: var(--dim); margin-top: 6px; }
 
-  /* フォーム入力 */
+  /* フォーム入力周り */
   .email-section {
     width: 100%; background: var(--glass); backdrop-filter: blur(12px);
     border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r); padding: 16px;
   }
   .email-title { font-size: 10px; margin-bottom: 8px; color: var(--white); }
   .email-desc { font-size: 7px; color: var(--dim); margin-bottom: 12px; line-height: 1.6; }
-  
   .form-input {
     width: 100%; padding: 12px; background: rgba(255,255,255,0.05);
     border: 1.5px solid rgba(255,255,255,0.15); border-radius: 8px; color: var(--white); font-size: 9px;
     font-family: 'Press Start 2P', monospace; outline: none; margin-bottom: 10px;
   }
   .form-input:focus { border-color: var(--green); }
-
   .btn-submit-flow {
     width: 100%; font-family: 'Press Start 2P', monospace; font-size: 10px;
     padding: 14px; border-radius: 8px; border: none; cursor: pointer;
@@ -223,7 +219,7 @@
   }
   .board-container {
     width: 100%; background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: var(--r); padding: 14px; max-height: 200px; overflow-y: auto;
+    border-radius: var(--r); padding: 14px; max-height: 220px; overflow-y: auto;
   }
   .board-container::-webkit-scrollbar { width: 4px; }
   .board-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
@@ -234,7 +230,7 @@
   .board-row.top3 { color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,0.4); }
   .board-row:last-child { border-bottom: none; }
   
-  /* ブランドストーリー型没入紹介カードブロック */
+  /* ストーリー型没入紹介カードブロック */
   .brand-stories-wrap {
     display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px;
   }
@@ -259,7 +255,7 @@
   .btn-retry {
     background: none; border: 1.5px solid rgba(255,255,255,0.15);
     color: var(--dim); font-size: 9px; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%;
-    font-family: 'Press Start 2P', monospace; -webkit-tap-highlight-color: transparent; margin-top: 16px;
+    font-family: 'Press Start 2P', monospace; -webkit-tap-highlight-color: transparent; margin-top: 8px;
   }
   .btn-retry:active { border-color: var(--green); color: var(--green); }
 
@@ -282,6 +278,7 @@
   <video id="camera-video" autoplay muted playsinline></video>
 </div>
 
+<!-- START SCREEN -->
 <div class="screen" id="screen-start">
   <div class="logo-badge">
     <img src="snafu_logo.png" class="badge-snafu" alt="SNAFU">
@@ -298,10 +295,12 @@
   <p class="cam-notice">CAMERA ACCESS REQUIRED<br>FOR THE GAMEPLAY</p>
 </div>
 
+<!-- COUNTDOWN SCREEN -->
 <div class="screen hidden" id="countdown-screen">
   <div class="countdown-num" id="countdown-text">3</div>
 </div>
 
+<!-- GAME SCREEN -->
 <div class="screen hidden" id="screen-game">
   <div id="hud">
     <div>
@@ -321,6 +320,7 @@
 
 <div id="combo-overlay"></div>
 
+<!-- RESULT SCREEN -->
 <div class="screen hidden" id="screen-result">
   <div class="result-header">
     <div class="result-eyebrow">GAME OVER</div>
@@ -359,6 +359,7 @@
   </div>
 </div>
 
+<!-- RANKING BOARD SCREEN -->
 <div class="screen hidden" id="screen-leaderboard">
   <h2 class="board-title">🏆 TOP 15 RECORDS</h2>
   
@@ -366,6 +367,7 @@
     <div style="text-align:center; padding:20px; font-size:8px; color:var(--dim);">LOADING...</div>
   </div>
 
+  <!-- ストーリー紹介プレミアム導入カード -->
   <div class="brand-stories-wrap">
     <a class="brand-story-card" id="link-snafu" href="#" target="_blank" rel="noopener">
       <div class="brand-story-header">
@@ -373,8 +375,7 @@
         <span>INSTAGRAM ➔</span>
       </div>
       <p class="brand-story-body">
-        SNAFU VINTAGE　　ーーーー「普通」を煙に巻く、東京ユースの秘密基地。
-大学2年次からスタートした、東京を拠点とする古着屋「SNAFU」。単に古いものを並べるのではなく、独自の審美眼でストレートなストリートカルチャーを再解釈。ユース世代が持つ特有のエネルギーと、他と絶対にかぶらない「オリジナル感」がミソ。独自のセンスが光る、新しいスタンダードを提案するショップ.
+        SNAFU VINTAGE selects premium archive items, subculture garments, and rare collectible pieces. We bridge timeless identity with modern street expressions.
       </p>
     </a>
     
@@ -384,8 +385,7 @@
         <span>INSTAGRAM ➔</span>
       </div>
       <p class="brand-story-body">
-        wacca　ーーーーデジタルが溶ける、新時代のクリエイティブ。
-3D製品開発を手がける、東京発のニュークリエイティブブランド「Wacca」。大学2年でのショップ運営始動から培った、ユース世代のリアルな空気感を最新の3Dテクノロジーへと昇華。「ただのデジタル製品」で終わらせない、エッジの効いたオリジナルな造形センスが魅力のブランドです。.
+        wacca redefines the cycle of creativity and craft. We deliver minimalist digital product identities, striking brand aesthetics, and borderless design logic for early visionaries.
       </p>
     </a>
   </div>
@@ -393,6 +393,7 @@
   <button class="btn-retry" id="btn-retry">RETRY</button>
 </div>
 
+<!-- SENDING OVERLAY -->
 <div id="sending-overlay">
   <div class="spinner"></div>
   <div class="sending-text">TRACKING DATA…</div>
@@ -402,9 +403,6 @@
 <div id="cam-denied">📵 NO CAMERA MODE</div>
 
 <script>
-// =============================================
-//  ⚠️ CONFIG — 最新のデプロイURLを使用してください
-// =============================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzGKQuK1k6cdDtbFn9kxGaGeRE-DGY3Ow4dxDqWXoT2z7Z2izB7dti4RWHrwoG7Xq6k/exec";
 const SNAFU_IG = "https://www.instagram.com/snafuvintage?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 const WACCA_IG  = "https://www.instagram.com/wacca__jp?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
@@ -414,7 +412,6 @@ const TARGET_IMAGES = ["snafu_logo.png", "wacca_logo.png"];
 const TARGET_INTERVAL_MIN = 250;   
 const TARGET_INTERVAL_MAX = 500;  
 const TARGET_LIFETIME     = 1200; 
-// =============================================
 
 /* ---- STATE ---- */
 const state = {
