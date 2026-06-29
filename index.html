@@ -61,7 +61,7 @@
   .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
   .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
   
-  /* waccaロゴ表示領域：白透過画像が完璧に見えるよう、干渉フィルターをすべて全消去 */
+  /* waccaロゴ：白透過アセットがダイレクトに綺麗に見えるよう、CSSフィルターを完全消去してプレーン化 */
   .badge-wacca { height: 165px; width: auto; object-fit: contain; }
 
   .edition-tag {
@@ -138,7 +138,7 @@
   .target.hit-vanish { animation: targetVanish 0.15s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; pointer-events: none; }
   @keyframes targetVanish { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
 
-  /* ===== FEEDBACKS ===== */
+  /* ===== OVERLAYS & FEEDBACKS ===== */
   #combo-overlay {
     position: fixed; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0);
     font-size: 20px; color: var(--green); text-shadow: var(--glow-g); z-index: 80; pointer-events: none; opacity: 0;
@@ -621,7 +621,7 @@ function endGame() {
 document.getElementById("link-snafu").addEventListener("click", () => { state.snsClickSnafu = true; });
 document.getElementById("link-wacca").addEventListener("click", () => { state.snsClickWacca = true; });
 
-/* ===== ☠️ 構造完全同期・強靭データ展開エンジン ☠️ ===== */
+/* ---- リアルタイムデータベース双方向同期コア ---- */
 async function sendDataWithCors(email, name) {
   if (state.submitted) return;
   state.submitted = true;
@@ -664,7 +664,7 @@ async function sendDataWithCors(email, name) {
   try {
     addConsoleLog("GASサーバーへデータを同期中...");
     
-    const res = await fetch(GAS_URL, {
+    const res  = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload)
@@ -691,7 +691,6 @@ async function sendDataWithCors(email, name) {
         const listEl = document.getElementById("leaderboard-list");
         listEl.innerHTML = ""; 
         
-        // GAS側のオブジェクトプロパティと厳密に結合
         const boardData = json.leaderboard || [];
         
         if (boardData.length === 0) {
@@ -701,21 +700,16 @@ async function sendDataWithCors(email, name) {
             const rank = index + 1;
             const isTop3 = rank <= 3 ? "top3" : "";
             const crown = rank === 1 ? "👑 " : rank === 2 ? "🥈 " : rank === 3 ? "🥉 " : `${rank}. `;
-            
-            // プロパティ名の不一致フォールバック
-            const pName = player.nickname || "ANON";
-            const pScore = player.score !== undefined ? player.score : 0;
-            
             listEl.innerHTML += `
               <div class="board-row ${isTop3}">
-                <span>${crown}${pName}</span>
-                <span>${pScore}P</span>
+                <span>${crown}${player.nickname || "ANON"}</span>
+                <span>${player.score !== undefined ? player.score : 0}P</span>
               </div>
             `;
           });
         }
       } else {
-        showLeaderboardFallback(name);
+        showLocalMirrorFallback(name);
       }
     }, 600);
 
@@ -726,7 +720,7 @@ async function sendDataWithCors(email, name) {
     
     setTimeout(() => {
       show("screen-leaderboard");
-      showLeaderboardFallback(name);
+      showLocalMirrorFallback(name);
     }, 1500); 
   } finally {
     setTimeout(() => {
@@ -735,7 +729,8 @@ async function sendDataWithCors(email, name) {
   }
 }
 
-function showLeaderboardFallback(currentName) {
+// データベースが復帰するまでの間、スプシから弾かれた際のみローカルで最低限の描画処理を走らせるバックアップトリガー
+function showLocalMirrorFallback(currentName) {
   const listEl = document.getElementById("leaderboard-list");
   listEl.innerHTML = `
     <div class="board-row top3">
@@ -743,7 +738,7 @@ function showLeaderboardFallback(currentName) {
       <span>${state.score}P</span>
     </div>
     <div style="text-align:center; padding:16px 0 6px; font-size:7px; color:var(--pink); letter-spacing:-0.5px;">
-      *DATABASE LINK TIME OUT. OFFLINE ACTIVE.
+      *DATABASE DESYNC. RETRY SUBMIT.
     </div>
   `;
 }
