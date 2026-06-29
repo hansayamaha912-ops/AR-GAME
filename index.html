@@ -55,15 +55,15 @@
   /* ===== START SCREEN ===== */
   #screen-start { gap: 0; }
   .logo-badge {
-    display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 24px;
-    margin-bottom: 40px; width: 100%; height: 30vh; 
+    display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 20px;
+    margin-bottom: 40px; width: 100%; height: 25vh; 
   }
-  .badge-snafu { height: 90px; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
-  .badge-x { font-size: 24px; color: var(--pink); text-shadow: 0 0 12px var(--pink); }
+  .badge-snafu { height: 75px; width: auto; object-fit: contain; filter: drop-shadow(var(--glow-v)); }
+  .badge-x { font-size: 20px; color: var(--pink); text-shadow: 0 0 12px var(--pink); font-weight: bold; }
   
-  /* waccaロゴ：開始画面でもスナフと同等の純白でパキッと直置き表示されるスタイル調整 */
+  /* waccaロゴ専用：輝度・明度を反転マックスにし、下地の黒要素を完全消去して100%純白にする特別フィルター */
   .badge-wacca { 
-    height: 165px; width: auto; object-fit: contain; 
+    height: 120px; width: auto; object-fit: contain; 
     filter: brightness(0) invert(1) drop-shadow(var(--glow-g)) !important;
   }
 
@@ -389,7 +389,7 @@
 
 <script>
 function handleWaccaLogoError(imgElement) {
-  const fallbacks = ["白透過.png", "白透過.jpg", "黒白.png", "黒白.PNG", "白透過.PNG", "wacca_logo.png"];
+  const fallbacks = ["白透過.png", "黒白.png", "白透過.jpg", "wacca_logo.png", "白透過.PNG", "黒白.PNG"];
   if (!imgElement.dataset.attempt) imgElement.dataset.attempt = "0";
   let attempt = parseInt(imgElement.dataset.attempt);
   if (attempt < fallbacks.length) {
@@ -399,12 +399,12 @@ function handleWaccaLogoError(imgElement) {
   } else {
     imgElement.style.display = "none";
     const txtNode = document.createElement("span");
-    txtNode.textContent = "WACCA"; txtNode.style.fontSize = "20px"; txtNode.style.fontWeight = "bold";
+    txtNode.textContent = "WACCA"; txtNode.style.fontSize = "16px"; txtNode.style.fontWeight = "bold"; txtNode.style.color = "#ffffff";
     imgElement.parentNode.appendChild(txtNode);
   }
 }
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzGKQuK1k6cdDtbFn9kxGaGeRE-DGY3Ow4dxDqWXoT2z7Z2izB7dti4RWHrwoG7Xq6k/exec;
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzGKQuK1k6cdDtbFn9kxGaGeRE-DGY3Ow4dxDqWXoT2z7Z2izB7dti4RWHrwoG7Xq6k/exec";
 const SNAFU_IG = "https://www.instagram.com/snafuvintage?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 const WACCA_IG  = "https://www.instagram.com/wacca__jp?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 
@@ -559,7 +559,6 @@ function spawnTarget() {
   const t = document.createElement("div");
   t.className = "target"; t.style.left = x + "px"; t.style.top = y + "px";
   
-  // 的の中のwaccaロゴを純白化処理
   const isWacca = randomImg === "白透過.png";
   const inlineStyle = isWacca ? "filter: brightness(0) invert(1) !important;" : "";
   t.innerHTML = `<div class="target-inner"><img src="${randomImg}" style="${inlineStyle}" alt="target" onerror="handleWaccaLogoError(this)"></div>`;
@@ -673,7 +672,6 @@ async function sendDataWithCors(email, name) {
     
     const res  = await fetch(GAS_URL, {
       method: "POST",
-      headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload)
     });
 
